@@ -1,0 +1,345 @@
+swagger: "2.0"
+info: 
+    title: "Rest API for expether"
+    description: "A REST API that comunicates with the eem python"
+    version: "0.1"
+
+consumes:
+    - application/json
+produces:
+    - application/json
+
+basePath: /api
+
+paths:
+    /assignament:
+        get:
+            operationId: api.assignaments.get_all_assignaments
+            tags: [ 
+                "assignaments"
+                ]
+            description: Read the entire list of assignaments
+            responses:
+                '200':
+                    description: 'List of assignaments'
+                    schema:
+                        type: array
+                        items:
+                            $ref: '#/definitions/Assignament'
+
+        post:
+            operationId: api.assignaments.assign
+            tags: [
+                "assignaments"
+                ]
+            description: Make an assignament and store it in E.S. 
+            consumes:
+                - application/json
+            parameters:
+                - in: body 
+                  name: assignament
+                  description: Assignament to perform
+                  schema:
+                    $ref: "#/definitions/Assignament"
+
+            responses:
+                '200':
+                    description: 'Assignament succesful'
+                '304':
+                    description: 'Assignament unssuccesful'
+
+    /assignament/{id}:
+        get:
+            operationId: api.assignaments.get_assignament
+            tags: [
+                "assignaments"
+                ]
+            description: Retrieve assignament information
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  type: number
+                  description: ID of the assignament to query
+            responses:
+                '200':
+                    description: 'Assignament found'
+                '400':
+                    description: 'Assignament not found'
+
+        delete:
+            operationId: api.assignaments.eliminate_assignament
+            tags: [
+                "assignaments"
+                ]
+            description: Eliminate assignament
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  type: number
+                  description: ID of the assignament to query
+            responses:
+                '200':
+                    description: 'Assignament eliminated'
+                '404':
+                    description: 'Assignament not found'
+
+    /workload:
+        get:
+            operationId: api.workloads.get_all_workloads
+            tags: [ 
+                "workloads"
+                ]
+            description: Retrieve the list of active workloads
+            responses:
+                '200':
+                    description: 'List of workloads'
+                    schema:
+                        type: array
+                        items:
+                            $ref: '#/definitions/Workload'
+
+        post:
+            operationId: api.workloads.create_workload
+            tags: [
+                "workloads"
+                ]
+            description: Make an assignament and store it in E.S. 
+            consumes:
+                - application/json
+            parameters:
+                - in: body 
+                  name: assignament
+                  description: Assignament to perform
+                  schema:
+                    $ref: "#/definitions/Workload"
+
+            responses:
+                '200':
+                    description: 'Workload created succesful'
+                '304':
+                    description: 'Workload could not be created'
+
+    /workload/{id}:
+        get:
+            operationId: api.workloads.get_workload
+            tags: [
+                "workloads"
+                ]
+            description: Retrieve workload information
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  type: number
+                  description: ID of the assignament to query
+            responses:
+                '200':
+                    description: 'Assignament found'
+                '400':
+                    description: 'Assignament not found'
+
+        delete:
+            operationId: api.workloads.eliminate_workload
+            tags: [
+                "workloads"
+                ]
+            description: Eliminate workload
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  type: number
+                  description: ID of the assignament to query
+            responses:
+                '200':
+                    description: 'Assignament eliminated'
+                '404':
+                    description: 'Assignament not found'
+
+    /box:
+        get:
+            operationId: api.boxes.get_all_boxes 
+            tags: [ 
+                "EEM boxes"
+                ]
+            description: Read the entire list of avaiable boxes
+            responses:
+                '200':
+                    description: 'List of boxes'
+                    schema:
+                        type: array
+                        items:
+                            type: string 
+
+        post:
+            operationId: api.boxes.create_tag
+            tags: [
+                "EMM boxes tags"
+                ]
+            description: Tag a box with a type of hardware 
+            consumes:
+                - application/json
+            parameters:
+                - in: body 
+                  name: assignament
+                  description: Assignament to perform
+                  schema:
+                    $ref: "#/definitions/BoxTag"
+
+            responses:
+                '200':
+                    description: 'Box tag created succesfully'
+                '304':
+                    description: 'Box tag could not be created'
+
+    /box/{id}:
+        get:
+            operationId: api.boxes.get_box_info
+            tags: [
+                "EEM boxes"
+                ]
+            description: Retrieve all available info abou the box
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  type: string
+                  description: ID of the box to query
+            responses:
+                '200':
+                    description: 'Box found'
+                    schema:
+                        type: array
+                        items:
+                            $ref: '#/definitions/BoxInfo'
+                '400':
+                    description: 'Box not found'
+
+        delete:
+            operationId: api.boxes.eliminate_tag
+            tags: [
+                "EMM boxes tags"
+                ]
+            description: Eliminate box
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  type: number
+                  description: ID of the box tag to eliminate
+            responses:
+                '200':
+                    description: 'Tag eliminated'
+                '404':
+                    description: 'Tag not found'
+
+definitions:
+    Assignament:
+        type: object
+        required:
+            - id
+        properties:
+            id:
+                type: number
+            workloadID:
+                type: number
+            boxID:
+                type: string
+
+    Workload:
+        type: object
+        required:
+            - id
+        properties:
+            id:
+                type: number
+            requirements: 
+                type: array
+                items: 
+                    type: string
+            status:
+                type: string
+
+    BoxTag:
+        type: object
+        required:
+            - id
+        properties:
+            id:
+                type: string
+            hardware:
+                type: string
+
+    BoxInfo:
+        type: object
+        required:
+            - id
+        properties:
+            id:
+                type: string
+            status:
+                type: string
+            update_time:
+                type: number
+            admin_status:
+                type: string
+            monitoring_status:
+                type: string
+            notification_status0:
+                type: integer 
+            notification_status1:
+                type: integer
+            mac_address:
+                type: string
+            group_id:
+                type: number
+            vlan_tagging:
+                type: string
+            multi_mac_addresses:
+                type: string
+            encryption:
+                type: integer
+            uid_switch_status:
+                type: string
+            power_status:
+                type: string
+            pcie_link_width:
+                type: string
+            interrupt_vector:
+                type: string
+            ee_version:
+                type: string
+            device_id:
+                type: string
+            revision:
+                type: string
+            fpga_version:
+                type: string
+            eeprom_data_version:
+                type: string
+            serial_number:
+                type: number
+            model:
+                type: string
+            link_status0:
+                type: string
+            link_status1:
+                type: string
+            path_status0:
+                type: string
+            path_status1:
+                type: string
+            eesv_connection_status:
+                type: string
+            eesv_mac_address:
+                type: string
+            pcie_connection_status:
+                type: string
+            pcie_vendor_id:
+                type: string
+            pcie_device_id:
+                type: string
+            pcie_class_code:
+                type: string

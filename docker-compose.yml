@@ -1,0 +1,33 @@
+version: '3'
+services:
+    api:
+        image: apitest
+        environment: 
+            - ELASTICSEARCH_HOST=elasticsearch
+            - ELASTICSEARCH_PORT=9200
+        depends_on:
+            - mysql
+        ports: 
+            - 5555:5555
+
+#    elasticsearch:
+#        image: docker.elastic.co/elasticsearch/elasticsearch:6.3.0
+#        environment:
+#            - ES_JAVA_OPTS=-Xms512m -Xmx512m
+#        volumes:
+#            - ./data/elasticsearch:/usr/share/elasticsearch/data
+#        ports: 
+#            - 9200:9200
+    
+    mysql:
+        image: mysql:5.7
+        environment:
+            MYSQL_ROOT_PASSWORD:    "root"
+            MYSQL_DATABASE:         "expether"
+            MYSQL_USER:             "expether"
+            MYSQL_PASSWORD:         "expether"
+        volumes:
+            - ./data/mysql:/var/lib/mysql   
+        ports:
+            - 3306:3306 # In case there needs to be changed later 
+

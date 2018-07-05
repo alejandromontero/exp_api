@@ -1,0 +1,71 @@
+BoxInfo:
+        type: object
+        required:
+            - id
+        properties:
+            id:
+                type: string
+            status:
+                type: string
+            update_time:
+                type: number
+            admin_status:
+                type: string
+            monitoring_status:
+                type: string
+            notification_status0:
+                type: integer 
+            notification_status1:
+                type: integer
+            mac_address:
+                type: string
+            group_id:
+                type: number
+            vlan_tagging:
+                type: string
+            multi_mac_addresses:
+                type: string
+            encryption:
+                type: integer
+            uid_switch_status:
+                type: string
+            power_status:
+                type: string
+            pcie_link_width:
+                type: string
+            interrupt_vector:
+                type: string
+            ee_version:
+                type: string
+            device_id:
+                type: string
+            revision:
+                type: string
+            fpga_version:
+                type: string
+            eeprom_data_version:
+                type: string
+            serial_number:
+                type: number
+            model:
+                type: string
+            link_status0:
+                type: string
+            link_status1:
+                type: string
+            path_status0:
+                type: string
+            path_status1:
+                type: string
+            eesv_connection_status:
+                type: string
+            eesv_mac_address:
+                type: string
+            pcie_connection_status:
+                type: string
+            pcie_vendor_id:
+                type: string
+            pcie_device_id:
+                type: string
+            pcie_class_code:
+                type: string
