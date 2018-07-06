@@ -1,4 +1,0 @@
-Flask
-connexion
-Flask-Injector
-elasticsearch
