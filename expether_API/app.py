@@ -2,20 +2,21 @@ import os
 import connexion
 from connexion.resolver import RestyResolver
 from flask_injector import FlaskInjector
-from services.elasticsearch.elasticsearch import (
-        ElasticSearchIndex,
-        ElasticSearchFactory
+from services.mysql.mysqlDB import (
+        MySQLFactory,
+        MySQL
     )
 
 
 def configure(binder):
     # workloadIndex = Key('workloadIndex')
     binder.bind(
-        ElasticSearchIndex,
-        to=ElasticSearchIndex(
-            ElasticSearchFactory(
-                os.environ['ELASTICSEARCH_HOST'],
-                os.environ['ELASTICSEARCH_PORT'],
+        MySQL,
+        to=MySQL(MySQLFactory(
+                os.environ['HOST'],
+                os.environ['MYSQL_USER'],
+                os.environ['MYSQL_PASSWORD'],
+                os.environ['MYSQL_DATABASE'],
             ),
         )
     )

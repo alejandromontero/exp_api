@@ -2,3 +2,5 @@ Flask
 connexion
 Flask-Injector
 elasticsearch
+mysql-connector
+mysql-connector-python

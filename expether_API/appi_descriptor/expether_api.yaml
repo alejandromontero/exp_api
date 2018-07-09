@@ -14,7 +14,7 @@ basePath: /api
 paths:
     /assignament:
         get:
-            operationId: api.assignaments.get_all_assignaments
+            operationId: api.assignaments.get_all_docs
             tags: [ 
                 "assignaments"
                 ]
@@ -28,7 +28,7 @@ paths:
                             $ref: '#/definitions/Assignament'
 
         post:
-            operationId: api.assignaments.assign
+            operationId: api.assignaments.create_doc
             tags: [
                 "assignaments"
                 ]
@@ -50,7 +50,7 @@ paths:
 
     /assignament/{id}:
         get:
-            operationId: api.assignaments.get_assignament
+            operationId: api.assignaments.get_doc
             tags: [
                 "assignaments"
                 ]
@@ -68,7 +68,7 @@ paths:
                     description: 'Assignament not found'
 
         delete:
-            operationId: api.assignaments.eliminate_assignament
+            operationId: api.assignaments.erase_doc
             tags: [
                 "assignaments"
                 ]
@@ -87,7 +87,7 @@ paths:
 
     /workload:
         get:
-            operationId: api.workloads.get_all_workloads
+            operationId: api.workloads.get_all_docs
             tags: [ 
                 "workloads"
                 ]
@@ -101,19 +101,19 @@ paths:
                             $ref: '#/definitions/Workload'
 
         post:
-            operationId: api.workloads.create_workload
+            operationId: api.workloads.create_doc
             tags: [
                 "workloads"
                 ]
-            description: Make an assignament and store it in E.S. 
+            description: Create a new workload 
             consumes:
                 - application/json
             parameters:
                 - in: body 
-                  name: assignament
-                  description: Assignament to perform
+                  name: doc
+                  description: 'Assignament to perform'
                   schema:
-                    $ref: "#/definitions/Workload"
+                    $ref: '#/definitions/Workload'
 
             responses:
                 '200':
@@ -123,7 +123,7 @@ paths:
 
     /workload/{id}:
         get:
-            operationId: api.workloads.get_workload
+            operationId: api.workloads.get_doc
             tags: [
                 "workloads"
                 ]
@@ -132,16 +132,19 @@ paths:
                 - in: path
                   name: id
                   required: true
-                  type: number
+                  type: string
                   description: ID of the assignament to query
             responses:
                 '200':
                     description: 'Assignament found'
+                    schema:
+                        type: object
+                        $ref: '#/definitions/Workload'
                 '400':
                     description: 'Assignament not found'
 
         delete:
-            operationId: api.workloads.eliminate_workload
+            operationId: api.workloads.erase_doc
             tags: [
                 "workloads"
                 ]
@@ -150,7 +153,7 @@ paths:
                 - in: path
                   name: id
                   required: true
-                  type: number
+                  type: string
                   description: ID of the assignament to query
             responses:
                 '200':
@@ -160,7 +163,7 @@ paths:
 
     /box:
         get:
-            operationId: api.boxes.get_all_boxes 
+            operationId: api.boxes.get_all_docs
             tags: [ 
                 "EEM boxes"
                 ]
@@ -174,7 +177,7 @@ paths:
                             type: string 
 
         post:
-            operationId: api.boxes.create_tag
+            operationId: api.boxes.create_doc
             tags: [
                 "EMM boxes tags"
                 ]
@@ -183,7 +186,7 @@ paths:
                 - application/json
             parameters:
                 - in: body 
-                  name: assignament
+                  name: doc
                   description: Assignament to perform
                   schema:
                     $ref: "#/definitions/BoxTag"
@@ -196,7 +199,7 @@ paths:
 
     /box/{id}:
         get:
-            operationId: api.boxes.get_box_info
+            operationId: api.boxes.get_doc
             tags: [
                 "EEM boxes"
                 ]
@@ -218,7 +221,7 @@ paths:
                     description: 'Box not found'
 
         delete:
-            operationId: api.boxes.eliminate_tag
+            operationId: api.boxes.erase_doc
             tags: [
                 "EMM boxes tags"
                 ]
@@ -227,7 +230,7 @@ paths:
                 - in: path
                   name: id
                   required: true
-                  type: number
+                  type: string
                   description: ID of the box tag to eliminate
             responses:
                 '200':
@@ -255,11 +258,11 @@ definitions:
         properties:
             id:
                 type: number
+            name:
+                type: string
             requirements: 
-                type: array
-                items: 
-                    type: string
-            status:
+                type: string
+            active:
                 type: string
 
     BoxTag:

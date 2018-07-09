@@ -1,1 +1,7 @@
+# DB data folder for the container
 data/
+
+# Byte compiled Python for optimization
+__pycache__/
+*.pyc
+*.pyo

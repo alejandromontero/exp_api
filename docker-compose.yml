@@ -2,9 +2,7 @@ version: '3'
 services:
     api:
         image: apitest
-        environment: 
-            - ELASTICSEARCH_HOST=elasticsearch
-            - ELASTICSEARCH_PORT=9200
+        env_file: db_variables.env
         depends_on:
             - mysql
         ports: 
@@ -21,13 +19,23 @@ services:
     
     mysql:
         image: mysql:5.7
-        environment:
-            MYSQL_ROOT_PASSWORD:    "root"
-            MYSQL_DATABASE:         "expether"
-            MYSQL_USER:             "expether"
-            MYSQL_PASSWORD:         "expether"
+        env_file: 
+            - db_variables.env
         volumes:
-            - ./data/mysql:/var/lib/mysql   
+            - ./data/mysql/data:/var/lib/mysql  
+            - ./expether_API/config/MySQL_config:/docker-entrypoint-initdb.d/:ro  
+              #command: --init-file ./expether_API/config/MySQL_config/init.sql
+        environment:
+            #MYSQL_ROOT_PASSWORD: $${MYSQL_ROOT_PASSWORD}
+            #MYSQL_USER: $${MYSQL_USER}
+            #MYSQL_PASSWORD: $${MYSQL_PASSWORD}
+            #MYSQL_DATABASE: $${MYSQL_DATABASE}
+
+            - MYSQL_ROOT_PASSWORD=root
+            - MYSQL_USER=expether
+            - MYSQL_PASSWORD=expether
+            - MYSQL_DATABASE=expether 
+
         ports:
             - 3306:3306 # In case there needs to be changed later 
 
