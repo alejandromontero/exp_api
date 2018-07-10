@@ -1,3 +1,5 @@
+CREATE DATABASE IF NOT EXISTS expether;
+
 use expether;
 
 CREATE TABLE IF NOT EXISTS workloads (
