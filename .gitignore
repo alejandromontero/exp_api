@@ -1,7 +1,14 @@
 # DB data folder for the container
 data/
 
+# VPN config
+VPN/
+
+# EEM client 
+eemCli
+
 # Byte compiled Python for optimization
 __pycache__/
 *.pyc
 *.pyo
+*.dat

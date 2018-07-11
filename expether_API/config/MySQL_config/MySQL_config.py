@@ -7,5 +7,7 @@ workload_mapping = {
 
 box_mapping = {
         "id": "varchar(255)",
-        "hardware": "varchar(255)"
+        "hardware": "varchar(255)",
+        "model": "varchar(255)",
+        "quantity": "int"
         }

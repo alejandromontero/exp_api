@@ -274,6 +274,10 @@ definitions:
                 type: string
             hardware:
                 type: string
+            model:
+                type: string
+            quantity:
+                type: number
 
     BoxInfo:
         type: object

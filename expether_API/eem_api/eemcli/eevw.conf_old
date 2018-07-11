@@ -1,9 +1,0 @@
-
-[DEFAULT]
-server_port = 30500
-timeout = 30
-auth = 0
-ssl = false
-
-[eevw]
-server_ip = 127.0.0.1

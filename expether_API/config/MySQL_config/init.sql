@@ -12,5 +12,7 @@ CREATE TABLE IF NOT EXISTS workloads (
 CREATE TABLE IF NOT EXISTS box_tags (
 	id varchar(255) NOT NULL,
 	hardware varchar(255),
+	model varchar(255),
+	quantity int,
 	PRIMARY KEY (id));
 
