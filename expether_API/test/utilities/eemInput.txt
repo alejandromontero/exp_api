@@ -1,0 +1,35 @@
+id                    : 0x8cdf9d9122b6
+status                : eeio
+update_time           : 1530869501997
+admin_status          : enabled
+monitoring_status     : enabled
+notification_status0  : [u'up', u'down']
+notification_status1  : [u'up', u'down']
+mac_address           : 8c:df:9d:91:22:b6
+group_id              : 4093
+vlan_tagging          : disabled
+multi_mac_addresses   : enabled
+encryption            : [u'disabled']
+type                  : 40g
+uid_switch_status     : off
+power_status          : on
+pcie_link_width       : x8
+interrupt_vector      : 0x0
+ee_version            : v1.0
+device_id             : 0x1e
+revision              : 0x0
+fpga_version          : 0x540027
+eeprom_data_version   : 0x1
+serial_number         : 7600101
+model                 : EE I/O Expansion Unit (40G)-4S
+link_status0          : up
+link_status1          : up
+path_status0          : down
+path_status1          : down
+eesv_connection_status: down
+eesv_mac_address      : 00:00:00:00:00:00
+pcie_connection_status: up
+pcie_vendor_id        : 0x10b5
+pcie_device_id        : 0x8732
+pcie_class_code       : 0x60400
+(timestamp: 1531234054216)
