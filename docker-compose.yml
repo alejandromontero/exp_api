@@ -8,15 +8,6 @@ services:
         ports: 
             - 5555:5555
 
-#    elasticsearch:
-#        image: docker.elastic.co/elasticsearch/elasticsearch:6.3.0
-#        environment:
-#            - ES_JAVA_OPTS=-Xms512m -Xmx512m
-#        volumes:
-#            - ./data/elasticsearch:/usr/share/elasticsearch/data
-#        ports: 
-#            - 9200:9200
-    
     mysql:
         image: mysql:5.7
         env_file: 
@@ -24,18 +15,6 @@ services:
         volumes:
             - ./data/mysql/data:/var/lib/mysql  
             - ./expether_API/config/MySQL_config:/docker-entrypoint-initdb.d/:ro  
-              #command: --init-file ./expether_API/config/MySQL_config/init.sql
-        environment:
-            #MYSQL_ROOT_PASSWORD: $${MYSQL_ROOT_PASSWORD}
-            #MYSQL_USER: $${MYSQL_USER}
-            #MYSQL_PASSWORD: $${MYSQL_PASSWORD}
-            #MYSQL_DATABASE: $${MYSQL_DATABASE}
-
-            - MYSQL_ROOT_PASSWORD=root
-            - MYSQL_USER=expether
-            - MYSQL_PASSWORD=expether
-            - MYSQL_DATABASE=expether 
-
         ports:
             - 3306:3306 # In case there needs to be changed later 
 

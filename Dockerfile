@@ -1,8 +1,9 @@
 FROM python:3.6
 
-run mkdir /API
-add ./expether_API /API
-add ./requirements.txt /API
-RUN pip install -r /API/requirements.txt
+run mkdir opt/API
+add ./requirements.txt opt/API
+RUN pip install -r opt/API/requirements.txt
+add ./eemCli /opt/eemCli
+add ./expether_API opt/API
 
-CMD ["python", "/API/app.py"]
+CMD ["python", "opt/API/app.py"]

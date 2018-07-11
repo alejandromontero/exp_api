@@ -12,7 +12,7 @@ class eemParser(object):
     def parse(doc):
         eemAttr = {}
         pattern = re.compile(
-            r'^[\s]*([a-zA-Z][\w]*)[\s]*\:[\s]*([\w\s\/\(\)\-]+)[\s]*',
+            r'([a-zA-Z][\w]*)[\s]*\:[\s]*([\w\s\/\(\)\-]+)[\s]*[\n]',
             re.M)
         entries = pattern.findall(doc)
         for entry in entries:
@@ -38,4 +38,22 @@ class eemParser(object):
             for entry3 in entries3:
                 eemAttr[entry[0]].append(entry3)
 
+        # Mac address special case
+        pattern = re.compile(
+                r'^(mac_address)[\s]*\:[\s]*(([a-fA-F0-9]{2}[:|\-]?){6})',
+                re.M)
+        entries = pattern.findall(doc)
+        for entry in entries:
+            eemAttr[entry[0]] = entry[1]
+
+        # Downstream ports special case (artificial list)
+        if re.search(r'downstream_ports', doc):
+            eemAttr["downstream_ports"] = {}
+            pattern = re.compile(
+                    r'(downstream_port_id)[\s]*\:[\s]*([0-9]+)[\n][\s]*([\w]*)[\s]*\:[\s](up)[\n][\s]*([\w]*)[\s]*\:[\s]*(([a-fA-F0-9]{2}[:|\-]?){6})',
+                    re.M)
+            entries = pattern.findall(doc)
+            entry = entries[0]  # There should only be one port up
+            for x in range(0, len(entry) - 1, 2):
+                eemAttr["downstream_ports"][entry[x + 0]] = entry[x + 1]
         return eemAttr
