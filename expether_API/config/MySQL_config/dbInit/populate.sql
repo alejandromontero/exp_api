@@ -24,7 +24,7 @@ VALUES
 ("0x743a6504489a", "2001", "brain1"),
 ("0x743a650441b2", "2002", "brain2");
 
-INSERT INTO box_tags(id,hardware,model,pcie_vendor_id,pcie_device_id)
+INSERT INTO hardware_cards(id,hardware,model,pcie_vendor_id,pcie_device_id)
 VALUES
 ("0x8cdf9d9122b6", "FPGA", "Nallatech 510t", "10b5", "8732"),
 ("0x8cdf9d9122b0", "FPGA", "Bittware A10PL4", "10b5", "8718"),

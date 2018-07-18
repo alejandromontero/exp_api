@@ -32,16 +32,20 @@ paths:
             tags: [
                 "assignaments"
                 ]
-            description: Make an assignament and store it in E.S. 
+            description: Make an assignament 
             consumes:
                 - application/json
             parameters:
                 - in: body 
-                  name: assignament
+                  name: workload
                   description: Assignament to perform
                   schema:
-                    $ref: "#/definitions/Assignament"
+                    type: object
+                    properties:
+                        workloadID:
+                            type: number
 
+                    
             responses:
                 '200':
                     description: 'Assignament succesful'
@@ -161,27 +165,27 @@ paths:
                 '404':
                     description: 'Assignament not found'
 
-    /box:
+    /card:
         get:
-            operationId: api.boxes.get_all_docs
+            operationId: api.cards.get_all_docs
             tags: [ 
-                "EEM boxes"
+                "EEM cards"
                 ]
-            description: Read the entire list of avaiable boxes
+            description: Read the entire list of avaiable cards
             responses:
                 '200':
-                    description: 'List of boxes'
+                    description: 'List of cards'
                     schema:
                         type: array
                         items:
                             type: string 
 
         post:
-            operationId: api.boxes.create_doc
+            operationId: api.cards.create_doc
             tags: [
-                "EMM boxes tags"
+                "EMM cards tags"
                 ]
-            description: Tag a box with a type of hardware 
+            description: Tag a card with a type of hardware 
             consumes:
                 - application/json
             parameters:
@@ -197,19 +201,19 @@ paths:
                 '304':
                     description: 'Box tag could not be created'
 
-    /box/{id}:
+    /card/{id}:
         get:
-            operationId: api.boxes.get_doc
+            operationId: api.cards.get_doc
             tags: [
-                "EEM boxes"
+                "EEM cards"
                 ]
-            description: Retrieve all available info abou the box
+            description: Retrieve all available info abou the card
             parameters:
                 - in: path
                   name: id
                   required: true
                   type: string
-                  description: ID of the box to query
+                  description: ID of the card to query
             responses:
                 '200':
                     description: 'Box found'
@@ -221,17 +225,17 @@ paths:
                     description: 'Box not found'
 
         delete:
-            operationId: api.boxes.erase_doc
+            operationId: api.cards.erase_doc
             tags: [
-                "EMM boxes tags"
+                "EMM cards tags"
                 ]
-            description: Eliminate box
+            description: Eliminate card
             parameters:
                 - in: path
                   name: id
                   required: true
                   type: string
-                  description: ID of the box tag to eliminate
+                  description: ID of the card tag to eliminate
             responses:
                 '200':
                     description: 'Tag eliminated'
@@ -241,34 +245,36 @@ paths:
 definitions:
     Assignament:
         type: object
-        required:
-            - id
         properties:
-            id:
+            workloadId:
                 type: number
-            workloadID:
-                type: number
-            boxID:
+            cardID:
                 type: string
 
     Workload:
         type: object
-        required:
-            - id
         properties:
             id:
                 type: number
             name:
                 type: string
-            requirements: 
+            requirement: 
                 type: string
             active:
                 type: string
+            assigned_to:
+                type: string
+
+    Server:
+        type: object
+        properties:
+            name:
+                type: string
+            number:
+                type: number
 
     BoxTag:
         type: object
-        required:
-            - id
         properties:
             id:
                 type: string
@@ -276,7 +282,21 @@ definitions:
                 type: string
             model:
                 type: string
-            quantity:
+            pcie_vendor_id:
+                type: string
+            pcie_device_id:
+                type: string
+            workload:
+                type: number
+
+    CardNet:
+        type: object
+        properties:
+            id:
+                type: string 
+            assigned_to: 
+                type: string
+            GID:
                 type: number
 
     BoxInfo:

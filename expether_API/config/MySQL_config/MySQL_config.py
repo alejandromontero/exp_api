@@ -6,7 +6,7 @@ workload_mapping = {
         "active": "tinyint(1)"
         }
 
-box_mapping = {
+hardware_card_mapping = {
         "id": "varchar(255)",
         "hardware": "varchar(255)",
         "model": "varchar(255)",

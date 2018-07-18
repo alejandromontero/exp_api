@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS net_card (
 	);
 
 
-CREATE TABLE IF NOT EXISTS box_tags (
+CREATE TABLE IF NOT EXISTS hardware_cards (
 	id varchar(255) NOT NULL,
 	hardware varchar(255),
 	model varchar(255),
@@ -39,11 +39,11 @@ CREATE TABLE IF NOT EXISTS box_tags (
 	);
 
 CREATE TABLE IF NOT EXISTS assignaments (
-	hardware_box varchar(255) NOT NULL,
+	hardware_card varchar(255) NOT NULL,
 	server_card varchar (255) NOT NULL,
 	workload int NOT NULL,
-	PRIMARY KEY (hardware_box,server_card,workload),
-	FOREIGN KEY (hardware_box) REFERENCES box_tags(id),
+	PRIMARY KEY (hardware_card,server_card,workload),
+	FOREIGN KEY (hardware_card) REFERENCES hardware_cards(id),
 	FOREIGN KEY (server_card) REFERENCES net_card(id),
 	FOREIGN KEY (workload) REFERENCES workloads(id)
 	);
