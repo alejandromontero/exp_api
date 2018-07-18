@@ -23,7 +23,7 @@ __eemcly = os.path.join(
 
 
 @inject
-def get_all_docs(DB: MySQL, EEM: EEM):
+def get_all_cards(DB: MySQL, EEM: EEM):
     out = EEM.get_list()
     ids = re.findall('0x[\w]*', out)
 
@@ -35,39 +35,39 @@ def get_all_docs(DB: MySQL, EEM: EEM):
 
 
 @inject
-def get_doc(id, DB: MySQL, EEM: EEM):
-    ids = get_all_docs(DB, EEM)
+def get_card(id, DB: MySQL, EEM: EEM):
+    ids = get_all_cards(DB, EEM)
     if id not in ids:
         return messenger.message404(
             "The requested card ID does not exist on the server")
 
     out = eemParser.parse(EEM.get_box_info(id))
     if re.match("^0x8", id) is not None:
-        statement = ("SELECT * FROM ") + __table
-        statement += (" WHERE id = \"%s\"") % id
-        doc = DB.exec_query(statement)
-        if not doc:
+        statement = ("SELECT * FROM %s ") % __table
+        statement += ("WHERE id = \"%s\"") % id
+        card = DB.exec_query(statement)
+        if not card:
             return messenger.message404(
                 "The requested card ID doesn't have any TAG available")
-        doc = doc[0]  # There should be only one doc as answer from the query
+        card = card[0]  # There should be only one card as answer from the query
         for param in range(0, len(__table_keys)):
-            out[__table_keys[param]] = doc[param]
+            out[__table_keys[param]] = card[param]
     return out
 
 
-# TODO: Add already existing doc control
+# TODO: Add already existing card control
 @inject
-def create_doc(doc, DB: MySQL):
+def create_card(card, DB: MySQL):
     values = {}
-    statement = ("INSERT INTO ") + __table
+    statement = ("INSERT INTO %s ") % __table
     statement += "("
     for x in range(0, len(__table_keys) - 1):
         statement += __table_keys[x] + ","
-        values[__table_keys[x]] = doc[__table_keys[x]]
+        values[__table_keys[x]] = card[__table_keys[x]]
     statement += __table_keys[len(__table_keys) - 1] + ") "
     statement += ("VALUES (")
     last_val = __table_keys[len(__table_keys) - 1]
-    values[__table_keys[len(__table_keys) - 1]] = doc[last_val]
+    values[__table_keys[len(__table_keys) - 1]] = card[last_val]
     for x in range(0, len(__table_keys) - 1):
         statement += "%(" + __table_keys[x] + ")s,"
     statement += "%(" + __table_keys[len(__table_keys) - 1] + ")s)"
@@ -81,10 +81,10 @@ def create_doc(doc, DB: MySQL):
     #    return error
 
 
-# TODO: Add does not exists doc control
+# TODO: Add does not exists card control
 @inject
-def erase_doc(id, DB: MySQL):
-    statement = ("DELETE FROM ") + __table
+def erase_card(id, DB: MySQL):
+    statement = ("DELETE FROM %s ") % __table
     statement += ("WHERE ID = ") + id
     DB.exec_query(statement)
     #if res:

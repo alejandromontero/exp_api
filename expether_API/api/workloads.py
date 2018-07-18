@@ -14,17 +14,17 @@ __workload_keys = list(mapping.keys())
 
 
 @inject
-def get_all_docs(DB: MySQL):
+def get_all_workloads(DB: MySQL):
     statement = ("SELECT * FROM ") + __table
-    docs = DB.exec_query(statement)
-    res_docs = []
-    if docs:
-        for doc in docs:
-            res_doc = {}
+    workloads = DB.exec_query(statement)
+    res_workloads = []
+    if workloads:
+        for workload in workloads:
+            res_workload = {}
             for x in range(0, len(__workload_keys)):
-                res_doc[__workload_keys[x]] = doc[x]
-            res_docs.append(res_doc)
-        return res_docs
+                res_workload[__workload_keys[x]] = workload[x]
+            res_workloads.append(res_workload)
+        return res_workloads
 
     else:
         error = {}
@@ -35,15 +35,15 @@ def get_all_docs(DB: MySQL):
 
 
 @inject
-def get_doc(id, DB: MySQL):
-    statement = ("SELECT * FROM ") + __table
-    statement += ("WHERE ID = ") + id
-    docs = DB.exec_query(statement)
-    doc = {}
-    if docs:
+def get_workload(id, DB: MySQL):
+    statement = ("SELECT * FROM %s ") % __table
+    statement += ("WHERE ID = %s") % id
+    workloads = DB.exec_query(statement)
+    workload = {}
+    if workloads:
         for x in range(0, len(__workload_keys)):
-            doc[__workload_keys[x]] = docs[0][x]
-        return doc
+            workload[__workload_keys[x]] = workloads[0][x]
+        return workload
 
     else:
         error = {}
@@ -54,20 +54,20 @@ def get_doc(id, DB: MySQL):
 
 
 @inject
-def create_doc(doc, DB: MySQL):
+def create_workload(workload, DB: MySQL):
     values = {}
     statement = ("INSERT INTO ") + __table
     statement += "("
     for x in range(0, len(__workload_keys) - 1):
         statement += __workload_keys[x] + ","
-        values[__workload_keys[x]] = doc[__workload_keys[x]]
+        values[__workload_keys[x]] = workload[__workload_keys[x]]
     statement += __workload_keys[len(__workload_keys) - 1] + ") "
     statement += ("VALUES (")
     last_val = __workload_keys[len(__workload_keys) - 1]
-    values[__workload_keys[len(__workload_keys) - 1]] = doc[last_val]
+    values[__workload_keys[len(__workload_keys) - 1]] = workload[last_val]
     for x in range(0, len(__workload_keys) - 1):
-        statement += "%(" + __workload_keys[x] + ")s,"
-    statement += "%(" + __workload_keys[len(__workload_keys) - 1] + ")s)"
+        statement += "(" + __workload_keys[x] + ")s,"
+    statement += "(" + __workload_keys[len(__workload_keys) - 1] + "))"
     DB.exec_query(statement, values)
     #print (statement,values)
     #else:
@@ -79,7 +79,7 @@ def create_doc(doc, DB: MySQL):
 
 
 @inject
-def erase_doc(id, DB: MySQL):
+def erase_workload(id, DB: MySQL):
     statement = ("DELETE FROM workloads "
             "WHERE ID = " ) + id
     DB.exec_query(statement)

@@ -12,36 +12,36 @@ from flask import (
 
 __table = "assignaments"
 __doc_type = "assignament"
-__workload_keys = list(mapping.keys())
+__table_keys = list(mapping.keys())
 
 
 @inject
-def get_all_docs(DB: MySQL):
-    statement = ("SELECT * FROM ") + __table
-    docs = DB.exec_query(statement)
-    res_docs = []
-    if docs:
-        for doc in docs:
-            res_doc = {}
-            for x in range(0, len(__workload_keys)):
-                res_doc[__workload_keys[x]] = doc[x]
-            res_docs.append(res_doc)
-        return res_docs
+def get_all_assignaments(DB: MySQL):
+    statement = ("SELECT * FROM %s ") % __table
+    assignaments = DB.exec_query(statement)
+    res_assignaments = []
+    if assignaments:
+        for assignament in assignaments:
+            res_assignament = {}
+            for x in range(0, len(__table_keys)):
+                res_assignament[__table_keys[x]] = assignament[x]
+            res_assignaments.append(res_assignament)
+        return res_assignaments
 
     else:
         return messenger.message404("No assignaments found", "404")
 
 
 @inject
-def get_doc(id, DB: MySQL):
-    statement = ("SELECT * FROM ") + __table
+def get_assignament(id, DB: MySQL):
+    statement = ("SELECT * FROM %s ") % __table
     statement += ("WHERE ID = ") + id
-    docs = DB.exec_query(statement)
-    doc = {}
-    if docs:
-        for x in range(0, len(__workload_keys)):
-            doc[__workload_keys[x]] = docs[0][x]
-        return doc
+    assignaments = DB.exec_query(statement)
+    assignament = {}
+    if assignaments:
+        for x in range(0, len(__table_keys)):
+            assignament[__table_keys[x]] = assignaments[0][x]
+        return assignament
 
     else:
         return messenger.message404(
@@ -49,24 +49,24 @@ def get_doc(id, DB: MySQL):
 
 
 @inject
-def create_doc(workload, DB: MySQL):
+def create_assignament(workload, DB: MySQL):
     values = {}
-    statement = ("INSERT INTO ") + __table
+    statement = ("INSERT INTO %s ") % __table
     statement += "("
-    for x in range(0, len(__workload_keys) - 1):
-        statement += __workload_keys[x] + ","
-        values[__workload_keys[x]] = doc[__workload_keys[x]]
-    statement += __workload_keys[len(__workload_keys) - 1] + ") "
+    for x in range(0, len(__table_keys) - 1):
+        statement += __table_keys[x] + ","
+        values[__table_keys[x]] = assignament[__table_keys[x]]
+    statement += __table_keys[len(__table_keys) - 1] + ") "
     statement += ("VALUES (")
-    last_val = __workload_keys[len(__workload_keys) - 1]
-    values[__workload_keys[len(__workload_keys) - 1]] = doc[last_val]
-    for x in range(0, len(__workload_keys) - 1):
-        statement += "%(" + __workload_keys[x] + ")s,"
-    statement += "%(" + __workload_keys[len(__workload_keys) - 1] + ")s)"
+    last_val = __table_keys[len(__table_keys) - 1]
+    values[__table_keys[len(__table_keys) - 1]] = assignament[last_val]
+    for x in range(0, len(__table_keys) - 1):
+        statement += "%(" + __table_keys[x] + ")s,"
+    statement += "%(" + __table_keys[len(__table_keys) - 1] + ")s)"
     DB.exec_query(statement, values)
 
 @inject
-def erase_doc(id, DB: MySQL):
+def erase_assignament(id, DB: MySQL):
     statement = ("DELETE FROM workloads "
             "WHERE ID = " ) + id
     DB.exec_query(statement)
