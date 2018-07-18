@@ -5,6 +5,7 @@ from services.eem.eem import EEM
 from utilities.eemParser import eemParser
 from flask_injector import inject
 from config.MySQL_config.MySQL_config import hardware_card_mapping as mapping
+from utilities.messages import messenger
 from flask import (
         make_response,
         abort
@@ -30,22 +31,15 @@ def get_all_docs(DB: MySQL, EEM: EEM):
         return ids
 
     else:
-        error = {}
-        error["detail"] = "The requested ID does not exist on the server"
-        error["status"] = "400"
-        error["title"] = "Not Found"
-        return error
+        return messenger.message404("There is not card info avilable")
 
 
 @inject
 def get_doc(id, DB: MySQL, EEM: EEM):
     ids = get_all_docs(DB, EEM)
     if id not in ids:
-        error = {}
-        error["detail"] = "The requested ID does not exist on the server"
-        error["status"] = "400"
-        error["title"] = "Not Found"
-        return error
+        return messenger.message404(
+            "The requested card ID does not exist on the server")
 
     out = eemParser.parse(EEM.get_box_info(id))
     if re.match("^0x8", id) is not None:
@@ -53,11 +47,8 @@ def get_doc(id, DB: MySQL, EEM: EEM):
         statement += (" WHERE id = \"%s\"") % id
         doc = DB.exec_query(statement)
         if not doc:
-            error = {}
-            error["detail"] = "The requested ID doesn't have any TAG available"
-            error["status"] = "400"
-            error["title"] = "Not Found"
-            return error
+            return messenger.message404(
+                "The requested card ID doesn't have any TAG available")
         doc = doc[0]  # There should be only one doc as answer from the query
         for param in range(0, len(__table_keys)):
             out[__table_keys[param]] = doc[param]

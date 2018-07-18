@@ -3,6 +3,8 @@ from services.mysql.mysqlDB import MySQL
 from flask_injector import inject
 #from ES_config.ES_config import workload_mapping as mapping
 from config.MySQL_config.MySQL_config import workload_mapping as mapping
+from utilities.messages import messenger
+from collections import Iterable
 from flask import (
         make_response,
         abort
@@ -27,11 +29,7 @@ def get_all_docs(DB: MySQL):
         return res_docs
 
     else:
-        error = {}
-        error["detail"] = "The requested ID does not exist on the server"
-        error["status"] = "400"
-        error["title"] = "Not Found"
-        return error
+        return messenger.message404("No assignaments found", "404")
 
 
 @inject
@@ -46,15 +44,12 @@ def get_doc(id, DB: MySQL):
         return doc
 
     else:
-        error = {}
-        error["detail"] = "The requested ID does not exist on the server"
-        error["status"] = "400"
-        error["title"] = "Not Found"
-        return error
+        return messenger.message404(
+                "The requested ID does not exist on the server", "404")
 
 
 @inject
-def create_doc(doc, DB: MySQL):
+def create_doc(workload, DB: MySQL):
     values = {}
     statement = ("INSERT INTO ") + __table
     statement += "("
@@ -69,14 +64,6 @@ def create_doc(doc, DB: MySQL):
         statement += "%(" + __workload_keys[x] + ")s,"
     statement += "%(" + __workload_keys[len(__workload_keys) - 1] + ")s)"
     DB.exec_query(statement, values)
-    #print (statement,values)
-    #else:
-    #    error = {}
-    #    error["detail"] = "The requested ID already exists on the server"
-    #    error["status"] = "304"
-    #    error["title"] = "Not Found"
-    #    return error
-
 
 @inject
 def erase_doc(id, DB: MySQL):
