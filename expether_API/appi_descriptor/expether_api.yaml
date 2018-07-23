@@ -14,7 +14,7 @@ basePath: /api
 paths:
     /assignament:
         get:
-            operationId: api.assignaments.get_all_docs
+            operationId: api.assignaments.get_all_assignaments
             tags: [ 
                 "assignaments"
                 ]
@@ -28,7 +28,7 @@ paths:
                             $ref: '#/definitions/Assignament'
 
         post:
-            operationId: api.assignaments.create_doc
+            operationId: api.assignaments.create_assignament
             tags: [
                 "assignaments"
                 ]
@@ -52,9 +52,33 @@ paths:
                 '304':
                     description: 'Assignament unssuccesful'
 
+        delete:
+            operationId: api.assignaments.erase_assignament
+            tags: [
+                "assignaments"
+                ]
+            description: Eliminate assignament
+            consumes:
+                - application/json
+            parameters:
+                - in: body
+                  name: workload
+                  description: Workload whose assignament to eliminate
+                  schema:
+                      type: object
+                      properties:
+                          workloadID:
+                              type: number
+            responses:
+                '200':
+                    description: 'Assignament eliminated'
+                '404':
+                    description: 'Assignament not found'
+
+
     /assignament/{id}:
         get:
-            operationId: api.assignaments.get_doc
+            operationId: api.assignaments.get_assignament
             tags: [
                 "assignaments"
                 ]
@@ -70,28 +94,11 @@ paths:
                     description: 'Assignament found'
                 '400':
                     description: 'Assignament not found'
-
-        delete:
-            operationId: api.assignaments.erase_doc
-            tags: [
-                "assignaments"
-                ]
-            description: Eliminate assignament
-            parameters:
-                - in: path
-                  name: id
-                  required: true
-                  type: number
-                  description: ID of the assignament to query
-            responses:
-                '200':
-                    description: 'Assignament eliminated'
-                '404':
-                    description: 'Assignament not found'
-
+            
+                    
     /workload:
         get:
-            operationId: api.workloads.get_all_docs
+            operationId: api.workloads.get_all_workloads
             tags: [ 
                 "workloads"
                 ]
@@ -105,7 +112,7 @@ paths:
                             $ref: '#/definitions/Workload'
 
         post:
-            operationId: api.workloads.create_doc
+            operationId: api.workloads.create_workload
             tags: [
                 "workloads"
                 ]
@@ -114,7 +121,7 @@ paths:
                 - application/json
             parameters:
                 - in: body 
-                  name: doc
+                  name: workload
                   description: 'Assignament to perform'
                   schema:
                     $ref: '#/definitions/Workload'
@@ -127,7 +134,7 @@ paths:
 
     /workload/{id}:
         get:
-            operationId: api.workloads.get_doc
+            operationId: api.workloads.get_workload
             tags: [
                 "workloads"
                 ]
@@ -148,7 +155,7 @@ paths:
                     description: 'Assignament not found'
 
         delete:
-            operationId: api.workloads.erase_doc
+            operationId: api.workloads.erase_workload
             tags: [
                 "workloads"
                 ]
@@ -167,7 +174,7 @@ paths:
 
     /card:
         get:
-            operationId: api.cards.get_all_docs
+            operationId: api.cards.get_all_cards
             tags: [ 
                 "EEM cards"
                 ]
@@ -181,7 +188,7 @@ paths:
                             type: string 
 
         post:
-            operationId: api.cards.create_doc
+            operationId: api.cards.create_card
             tags: [
                 "EMM cards tags"
                 ]
@@ -190,7 +197,7 @@ paths:
                 - application/json
             parameters:
                 - in: body 
-                  name: doc
+                  name: card
                   description: Assignament to perform
                   schema:
                     $ref: "#/definitions/BoxTag"
@@ -203,7 +210,7 @@ paths:
 
     /card/{id}:
         get:
-            operationId: api.cards.get_doc
+            operationId: api.cards.get_card
             tags: [
                 "EEM cards"
                 ]
@@ -225,7 +232,7 @@ paths:
                     description: 'Box not found'
 
         delete:
-            operationId: api.cards.erase_doc
+            operationId: api.cards.erase_card
             tags: [
                 "EMM cards tags"
                 ]

@@ -84,3 +84,28 @@ class MySQL(object):
         cnx.commit()
         cursor.close()
         return (True, "OK")
+
+    def delete_query(self, table, mapping, data):
+        if len(mapping) != len(data):
+            message = "Value length does not correspond"
+            message += "To the size of the table mapping"
+            return (False, message)
+
+        statement = ("DELETE FROM %s ") % table
+        statement += "WHERE "
+        for x in range(0, len(mapping) - 1):
+            statement += mapping[x] + " = " + data[x] + " AND "
+        statement += mapping[-1] + " = " + str(data[-1])
+
+        cnx = self.connection()
+        cursor = cnx.cursor()
+
+        try:
+            cursor.execute(statement)
+        except (Error, Warning) as err:
+            print(err)
+
+        cursor.close()
+        cnx.commit()
+        cursor.close()
+        return (True, "OK")

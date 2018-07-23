@@ -28,7 +28,7 @@ class EEM(object):
 
     def make_request(self, expanded_cmd):
         return Popen(
-                self.get_cmd()+expanded_cmd,
+                self.get_cmd() + expanded_cmd,
                 stdout=PIPE).communicate()[0].decode('ascii')
 
     def get_cmd(self):
@@ -43,3 +43,24 @@ class EEM(object):
     def get_box_info(self, id):
         expanded_cmd = ['get', '--id', id]
         return self.make_request(expanded_cmd)
+
+    def assign_hardware_to_server(self, hardware_box, gid):
+        # eemcli set_gid -i 0x8.... -g $(( 1000 + server_number ))
+        expanded_cmd = [
+            "set_gid",
+            "-i",
+            hardware_box,
+            "-g",
+            gid]
+
+        return self.get_cmd() + expanded_cmd
+
+    def disconect_hardware_from_server(self, gid, port):
+        expanded_cmd = [
+            "del_iomac",
+            "-i",
+            gid,
+            "--port",
+            port]
+
+        return self.get_cmd() + expanded_cmd
