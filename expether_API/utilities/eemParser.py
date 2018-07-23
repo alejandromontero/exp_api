@@ -48,12 +48,15 @@ class eemParser(object):
 
         # Downstream ports special case (artificial list)
         if re.search(r'downstream_ports', doc):
-            eemAttr["downstream_ports"] = {}
             pattern = re.compile(
                     r'(downstream_port_id)[\s]*\:[\s]*([0-9]+)[\n][\s]*([\w]*)[\s]*\:[\s](up)[\n][\s]*([\w]*)[\s]*\:[\s]*(([a-fA-F0-9]{2}[:|\-]?){6})',
                     re.M)
             entries = pattern.findall(doc)
-            entry = entries[0]  # There should only be one port up
-            for x in range(0, len(entry) - 1, 2):
-                eemAttr["downstream_ports"][entry[x + 0]] = entry[x + 1]
+            if entries:
+                eemAttr["downstream_port"] = {}
+                entry = entries[0]  # There should only be one port up
+                for x in range(0, len(entry) - 1, 2):
+                    eemAttr["downstream_port"][entry[x + 0]] = entry[x + 1]
+            else:
+                eemAttr["downstream_port"] = "All down"
         return eemAttr

@@ -18,3 +18,17 @@ class messenger(object):
         error["detail"] += message
         error["status"] = "409"
         return error
+
+    @staticmethod
+    def message200(message):
+        success = {}
+        success["status"] = "200"
+        success["detail"] = message
+        return success
+
+    @staticmethod
+    def general_error(message):
+        error = {}
+        error["status"] = "500"
+        error["detail"] = message
+        return error

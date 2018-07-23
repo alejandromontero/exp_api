@@ -10,8 +10,8 @@ VALUES
 
 INSERT INTO workloads(name,requirement,assigned_to)
 VALUES
-("test1", "FPGA", "bscdc12"), 
-("test2", "GPU", "bscdc13"), 
+("test1", "GPU", "bscdc12"), 
+("test2", "FPGA", "bscdc13"), 
 ("test3", "NMVE", "bscdc14"); 
 
 INSERT INTO net_card(id,gid,assigned_to)
@@ -34,4 +34,4 @@ VALUES
 
 INSERT INTO assignaments
 VALUES
-("0x8cdf9d9122b0", "0x743a65046d30", 1);
+("0x8cdf9dd32012", "0x743a65046d30", 1);

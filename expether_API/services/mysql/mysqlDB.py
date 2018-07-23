@@ -1,6 +1,8 @@
 from mysql.connector import (
         MySQLConnection,
-        errorcode
+        errorcode,
+        Error,
+        Warning
         )
 
 
@@ -33,13 +35,14 @@ class MySQL(object):
 
         return self.instance
 
-    def exec_query(self, statement, values=None):
+    def select_query(self, statement):
         cnx = self.connection()
         cursor = cnx.cursor()
-        if values is None:
+        try:
             cursor.execute(statement)
-        else:
-            cursor.execute(statement, values)
+        except (Error, Warning) as err:
+            print (err)
+
         values = []
         for entry in cursor:
             values.append(entry)
@@ -48,3 +51,36 @@ class MySQL(object):
         cursor.close()
 
         return values
+
+    def insert_query(self, table, mapping, data):
+        if len(mapping) != len(data):
+            message = "Value length does not correspond"
+            message += "To the size of the table mapping"
+            return (False, message)
+
+        statement = ("INSERT INTO %s") % table
+        statement += "("
+        values = {}
+        for x in range(0, len(mapping) - 1):
+            statement += mapping[x] + ","
+
+        statement += mapping[-1] + ")"
+        statement += "VALUES ("
+        for x in range(0, len(mapping) - 1):
+            statement += "%(" + mapping[x] + ")s, "
+            values[mapping[x]] = data[x]
+        statement += "%(" + mapping[-1] + ")s)"
+        values[mapping[-1]] = data[-1]
+
+        cnx = self.connection()
+        cursor = cnx.cursor()
+
+        try:
+            cursor.execute(statement, values)
+        except (Error, Warning) as err:
+            print(err)
+
+        cursor.close()
+        cnx.commit()
+        cursor.close()
+        return (True, "OK")

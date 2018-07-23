@@ -16,7 +16,7 @@ __workload_keys = list(mapping.keys())
 @inject
 def get_all_workloads(DB: MySQL):
     statement = ("SELECT * FROM ") + __table
-    workloads = DB.exec_query(statement)
+    workloads = DB.select_query(statement)
     res_workloads = []
     if workloads:
         for workload in workloads:
@@ -38,7 +38,7 @@ def get_all_workloads(DB: MySQL):
 def get_workload(id, DB: MySQL):
     statement = ("SELECT * FROM %s ") % __table
     statement += ("WHERE ID = %s") % id
-    workloads = DB.exec_query(statement)
+    workloads = DB.select_query(statement)
     workload = {}
     if workloads:
         for x in range(0, len(__workload_keys)):
@@ -66,9 +66,9 @@ def create_workload(workload, DB: MySQL):
     last_val = __workload_keys[len(__workload_keys) - 1]
     values[__workload_keys[len(__workload_keys) - 1]] = workload[last_val]
     for x in range(0, len(__workload_keys) - 1):
-        statement += "(" + __workload_keys[x] + ")s,"
+        statement += "(" + __workload_keys[x] + "),"
     statement += "(" + __workload_keys[len(__workload_keys) - 1] + "))"
-    DB.exec_query(statement, values)
+    DB.insert_query(statement, values)
     #print (statement,values)
     #else:
     #    error = {}
@@ -82,7 +82,7 @@ def create_workload(workload, DB: MySQL):
 def erase_workload(id, DB: MySQL):
     statement = ("DELETE FROM workloads "
             "WHERE ID = " ) + id
-    DB.exec_query(statement)
+    #DB.select_query(statement)
     #if res:
     #    return 200
     #else:

@@ -45,7 +45,7 @@ def get_card(id, DB: MySQL, EEM: EEM):
     if re.match("^0x8", id) is not None:
         statement = ("SELECT * FROM %s ") % __table
         statement += ("WHERE id = \"%s\"") % id
-        card = DB.exec_query(statement)
+        card = DB.select_query(statement)
         if not card:
             return messenger.message404(
                 "The requested card ID doesn't have any TAG available")
@@ -71,7 +71,7 @@ def create_card(card, DB: MySQL):
     for x in range(0, len(__table_keys) - 1):
         statement += "%(" + __table_keys[x] + ")s,"
     statement += "%(" + __table_keys[len(__table_keys) - 1] + ")s)"
-    DB.exec_query(statement, values)
+    DB.insert_query(statement, values)
     #print (statement,values)
     #else:
     #    error = {}
@@ -86,7 +86,7 @@ def create_card(card, DB: MySQL):
 def erase_card(id, DB: MySQL):
     statement = ("DELETE FROM %s ") % __table
     statement += ("WHERE ID = ") + id
-    DB.exec_query(statement)
+    DB.select_query(statement)
     #if res:
     #    return 200
     #else:
