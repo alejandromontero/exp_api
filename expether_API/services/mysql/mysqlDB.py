@@ -68,21 +68,51 @@ class MySQL(object):
         statement += "VALUES ("
         for x in range(0, len(mapping) - 1):
             statement += "%(" + mapping[x] + ")s, "
-            values[mapping[x]] = data[x]
+            values[mapping[x]] = '%s' % (data[x])
+
         statement += "%(" + mapping[-1] + ")s)"
-        values[mapping[-1]] = data[-1]
+        values[mapping[-1]] = '%s' % (data[-1])
+
+        cnx = self.connection()
+        cursor = cnx.cursor()
+        try:
+            cursor.execute(statement, values)
+        except (Error, Warning) as err:
+            return (False, str(err))
+
+        cursor.close()
+        cnx.commit()
+        cursor.close()
+        return (True, "OK")
+
+    def modify_query(self, table, mapping, data, modID, modValue):
+        if len(mapping) != len(data):
+            message = "Value length does not correspond"
+            message += "To the size of the table mapping"
+            return (False, message)
+
+        statement = (
+                'UPDATE %s '
+                "SET "
+                ) % table
+        for x in range(0, len(mapping) - 1):
+            statement += '%s = "%s", ' % (mapping[x], data[x])
+
+        statement += '%s = "%s" ' % (mapping[-1], data[-1])
+        statement += 'WHERE %s = "%s"' % (modID, modValue)
 
         cnx = self.connection()
         cursor = cnx.cursor()
 
         try:
-            cursor.execute(statement, values)
+            cursor.execute(statement)
         except (Error, Warning) as err:
-            print(err)
+            return (False, str(err))
 
         cursor.close()
         cnx.commit()
         cursor.close()
+
         return (True, "OK")
 
     def delete_query(self, table, mapping, data):
@@ -94,8 +124,8 @@ class MySQL(object):
         statement = ("DELETE FROM %s ") % table
         statement += "WHERE "
         for x in range(0, len(mapping) - 1):
-            statement += mapping[x] + " = " + data[x] + " AND "
-        statement += mapping[-1] + " = " + str(data[-1])
+            statement += '%s = "%s" AND ' % (mapping[x], data[x])
+        statement += '%s = "%s"' % (mapping[-1], data[-1])
 
         cnx = self.connection()
         cursor = cnx.cursor()

@@ -1,9 +1,0 @@
-# --- Common specific parameters -------------------------
-APIHost			= 0.0.0.0;	# Host that executes the API
-APIPort			= 5555;		# Port that the API listens to
-DB				= MySQL;	# DB flavor. Options are MySQL or ElasticSearch
-
-# --- Parameters that configure the eemcli access --------
-eemVMHost			= localhost; 
-eemVMuser			= USER;
-eemVMpassword		= PASSWORD;

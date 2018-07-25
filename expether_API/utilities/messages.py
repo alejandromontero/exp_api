@@ -27,6 +27,21 @@ class messenger(object):
         return success
 
     @staticmethod
+    def message200Debug(message, debug):
+        success = {}
+        success["status"] = "200"
+        success["detail"] = message
+        success["debug"] = debug
+
+    @staticmethod
+    def messageWorkload(id):
+        success = {}
+        success["status"] = "200"
+        success["workloadID"] = id
+        success["detail"] = "Workload correctly created"
+        return success
+
+    @staticmethod
     def general_error(message):
         error = {}
         error["status"] = "500"

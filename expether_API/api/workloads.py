@@ -1,15 +1,16 @@
 from services.elasticsearch.elasticsearch import ElasticSearchIndex
 from services.mysql.mysqlDB import MySQL
 from flask_injector import inject
-#from ES_config.ES_config import workload_mapping as mapping
 from config.MySQL_config.MySQL_config import workload_mapping as mapping
+from utilities.messages import messenger
+from copy import deepcopy
+from collections import Iterable
 from flask import (
         make_response,
         abort
 )
 
 __table = "workloads"
-__doc_type = "workloads"
 __workload_keys = list(mapping.keys())
 
 
@@ -55,39 +56,43 @@ def get_workload(id, DB: MySQL):
 
 @inject
 def create_workload(workload, DB: MySQL):
-    values = {}
-    statement = ("INSERT INTO ") + __table
-    statement += "("
-    for x in range(0, len(__workload_keys) - 1):
-        statement += __workload_keys[x] + ","
-        values[__workload_keys[x]] = workload[__workload_keys[x]]
-    statement += __workload_keys[len(__workload_keys) - 1] + ") "
-    statement += ("VALUES (")
-    last_val = __workload_keys[len(__workload_keys) - 1]
-    values[__workload_keys[len(__workload_keys) - 1]] = workload[last_val]
-    for x in range(0, len(__workload_keys) - 1):
-        statement += "(" + __workload_keys[x] + "),"
-    statement += "(" + __workload_keys[len(__workload_keys) - 1] + "))"
-    DB.insert_query(statement, values)
-    #print (statement,values)
-    #else:
-    #    error = {}
-    #    error["detail"] = "The requested ID already exists on the server"
-    #    error["status"] = "304"
-    #    error["title"] = "Not Found"
-    #    return error
+    mapping = deepcopy(__workload_keys)
+    mapping.remove("id")
+    if len(workload.keys()) != len(mapping):
+        message = "Inserted workload data is incorrect"
+        return messenger.message404(message)
+
+    values = []
+    for x in range(0, len(mapping)):
+        values.append(workload[mapping[x]])
+
+    status, message = DB.insert_query(
+        __table,
+        mapping,
+        values)
+
+    if not status:
+        return messenger.message404(message)
+
+    statement = ("SELECT LAST_INSERT_ID()")
+    id = DB.select_query(statement)
+    while (isinstance(id, Iterable)):
+        id = next(iter(id))
+
+    return messenger.messageWorkload(id)
 
 
 @inject
 def erase_workload(id, DB: MySQL):
-    statement = ("DELETE FROM workloads "
-            "WHERE ID = " ) + id
-    #DB.select_query(statement)
-    #if res:
-    #    return 200
-    #else:
-    #    error = {}
-    #    error["detail"] = "The requested ID does not exist"
-    #    error["status"] = "404"
-    #    error["title"] = "Not Found"
-    #    return error
+    mapping = ["id"]
+    values = [id]
+
+    status, message = DB.delete_query(
+        __table,
+        mapping,
+        values)
+
+    if status:
+        return messenger.message200(message)
+    else:
+        return messenger.message404(message)

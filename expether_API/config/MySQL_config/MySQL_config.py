@@ -2,8 +2,7 @@ workload_mapping = {
         "id": "int",
         "name": "varchar(255)",
         "requirement": "varchar(255)",
-        "assigned_to": "varchar(255)",
-        "active": "tinyint(1)"
+        "assigned_to": "varchar(255)"
         }
 
 hardware_card_mapping = {
@@ -12,7 +11,6 @@ hardware_card_mapping = {
         "model": "varchar(255)",
         "pcie_vendor_id": "varchar(255)",
         "pcie_device_id": "varchar(255)",
-        "assigned_to":  "varchar(255)"
         }
 
 net_card_mapping = {

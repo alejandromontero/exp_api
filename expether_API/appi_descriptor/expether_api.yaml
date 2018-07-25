@@ -186,9 +186,10 @@ paths:
                         type: array
                         items:
                             type: string 
-
+    
+    /card_hardware:
         post:
-            operationId: api.cards.create_card
+            operationId: api.cards.create_hardware_tag
             tags: [
                 "EMM cards tags"
                 ]
@@ -200,7 +201,72 @@ paths:
                   name: card
                   description: Assignament to perform
                   schema:
-                    $ref: "#/definitions/BoxTag"
+                    $ref: "#/definitions/HardwareTag"
+
+            responses:
+                '200':
+                    description: 'Box tag created succesfully'
+                '304':
+                    description: 'Box tag could not be created'
+
+        put:
+            operationId: api.cards.modify_hardware_tag
+            tags: [
+                "EMM cards tags"
+                ]
+            description: Modify a hardware tag for an entry already present on the DB
+            consumes:
+                - application/json
+            parameters:
+                - in: body 
+                  name: card
+                  description: Assignament to perform
+                  schema:
+                    $ref: "#/definitions/HardwareTag"
+
+            responses:
+                '200':
+                    description: 'Box tag created succesfully'
+                '304':
+                    description: 'Box tag could not be modified'
+
+    
+    /card_net:
+        post:
+            operationId: api.cards.create_net_tag
+            tags: [
+                "EMM cards tags"
+                ]
+            description: Tag a network card with a gid and server 
+            consumes:
+                - application/json
+            parameters:
+                - in: body 
+                  name: card
+                  description: Assignament to perform
+                  schema:
+                    $ref: "#/definitions/NetTag"
+
+            responses:
+                '200':
+                    description: 'Box tag created succesfully'
+                '304':
+                    description: 'Box tag could not be created'
+
+        put:
+            operationId: api.cards.modify_net_tag
+            tags: [
+                "EMM cards tags"
+                ]
+            description: Modify a network card tag for an entry already present on the DB
+            consumes:
+                - application/json
+            parameters:
+                - in: body 
+                  name: card
+                  description: Assignament to perform
+                  schema:
+                    $ref: "#/definitions/NetTag"
 
             responses:
                 '200':
@@ -261,13 +327,9 @@ definitions:
     Workload:
         type: object
         properties:
-            id:
-                type: number
             name:
                 type: string
             requirement: 
-                type: string
-            active:
                 type: string
             assigned_to:
                 type: string
@@ -280,7 +342,7 @@ definitions:
             number:
                 type: number
 
-    BoxTag:
+    HardwareTag:
         type: object
         properties:
             id:
@@ -290,20 +352,18 @@ definitions:
             model:
                 type: string
             pcie_vendor_id:
-                type: string
+                type: number
             pcie_device_id:
-                type: string
-            workload:
                 type: number
 
-    CardNet:
+    NetTag:
         type: object
         properties:
             id:
                 type: string 
             assigned_to: 
                 type: string
-            GID:
+            gid:
                 type: number
 
     BoxInfo:

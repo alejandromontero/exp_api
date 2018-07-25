@@ -102,7 +102,7 @@ def get_available_hardware(workload_id, DB, EEM):
         for hardware in available_hardware:
             if isinstance(hardware, Iterable):
                 hardware = next(iter(hardware))
-            if is_feasible_to_asign_hardware(hardware):
+            if is_feasible_to_asign_hardware(hardware, DB, EEM):
                 non_assigned_hardware.append(hardware)
         return non_assigned_hardware
     else:
@@ -208,7 +208,12 @@ def create_assignament(workload, DB: MySQL, EEM: EEM):
                 __table_keys,
                 values)
         if status:
-            return EEM.assign_hardware_to_server(box, gid)
+            return messenger.mesage200Debug(
+                "New VLAN created between %s and %s" % (
+                    box,
+                    workload_server_net_card),
+                EEM.assign_hardware_to_server(box, gid)
+            )
         else:
             return messenger.general_error(message)
     else:
@@ -225,29 +230,38 @@ def erase_assignament(workload, DB: MySQL, EEM: EEM):
     downs_port = get_card(workload_server_net_card, DB, EEM)["downstream_port"]
     if downs_port == "All down":
         message = (
-        "Cannot erase assignament as the network card %s "
-            "does not have any hardware card connected"
+            "Cannot erase assignment as the network card %s "
+            "does not have any hardware card attached"
             % workload_server_net_card)
         return messenger.message404(message)
     downs_port = downs_port["downstream_port_id"]
     assigned_hardware = get_assignament_hardware(workload_id, DB)
     if not assigned_hardware:
         message = (
-            "Cannot erase assignament as the workload does not "
+            "Cannot erase assignment as the workload does not "
             "have any hardware card assigned"
         )
         return messenger.message404(message)
-
-    if is_feasible_to_unasign_hardware(
-            assigned_hardware,
-            workload_server_net_card,
-            DB):
-        cmd = EEM.disconect_hardware_from_server(
-                gid,
-                downs_port)
 
     values = [assigned_hardware, workload_server_net_card, workload_id]
     status, message = DB.delete_query(
             __table,
             __table_keys,
             values)
+
+    if is_feasible_to_unasign_hardware(
+            assigned_hardware,
+            workload_server_net_card,
+            DB):
+        return messenger.mesage200Debug(
+            "VLAN erased between %s and %s" % (
+                assigned_hardware,
+                workload_server_net_card),
+            EEM.disconect_hardware_from_server(gid, downs_port)
+        )
+
+    else:
+        return messenger.message200(
+            "VLAN between %s and %s could't be erased as "
+            "there are other assignaments in progress"
+        ) % (assigned_hardware, workload_server_net_card)

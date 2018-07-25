@@ -4,22 +4,61 @@ from services.mysql.mysqlDB import MySQL
 from services.eem.eem import EEM
 from utilities.eemParser import eemParser
 from flask_injector import inject
-from config.MySQL_config.MySQL_config import hardware_card_mapping as mapping
+from config.MySQL_config.MySQL_config import hardware_card_mapping as mapping_hardware
+from config.MySQL_config.MySQL_config import net_card_mapping as mapping_net
 from utilities.messages import messenger
 from flask import (
         make_response,
         abort
 )
 
-__table = "hardware_cards"
-__table_keys = list(mapping.keys())
-__eemcly = os.path.join(
-        os.path.dirname(__file__),
-        '..', 'eemcli', 'eemcli.py'
-        )
+__table_hardware = "hardware_cards"
+__table_net = "net_card"
+__table_keys_hardware = list(mapping_hardware.keys())
+__table_keys_net = list(mapping_net.keys())
 
 
-#def surround_by_quotes(string):
+def insert_card(card, table, mapping, DB, EEM):
+    #return (True, len(mapping))
+    if len(card.keys()) != len(mapping):
+        message = "Inserted card data is incorrect"
+        return (False, message)
+
+    cards = get_all_cards(DB, EEM)
+    if card["id"] not in cards:
+        message = "Card ID does not exist in EEM"
+        return (False, message)
+
+    values = []
+    for x in range(0, len(mapping)):
+        values.append(card[mapping[x]])
+
+    return DB.insert_query(
+        table,
+        mapping,
+        values)
+
+
+def modify_card(card, table, mapping, DB, EEM):
+    if len(card.keys()) != len(mapping):
+        message = "Inserted card data is incorrect"
+        return (False, message)
+    out = get_card(card["id"], DB, EEM)
+    if out["status"] == "404":
+        message = "The card to modify has no entry in the DB"
+        return (False, message)
+
+    mapping.remove("id")
+    values = []
+    for x in range(0, len(mapping)):
+        values.append(card[mapping[x]])
+
+    return DB.modify_query(
+        table,
+        mapping,
+        values,
+        "id",
+        card["id"])
 
 
 @inject
@@ -42,51 +81,89 @@ def get_card(id, DB: MySQL, EEM: EEM):
             "The requested card ID does not exist on the server")
 
     out = eemParser.parse(EEM.get_box_info(id))
-    if re.match("^0x8", id) is not None:
-        statement = ("SELECT * FROM %s ") % __table
-        statement += ("WHERE id = \"%s\"") % id
-        card = DB.select_query(statement)
-        if not card:
-            return messenger.message404(
-                "The requested card ID doesn't have any TAG available")
+    if out["status"] == "eeio":
+        table = __table_hardware
+        mapping = __table_keys_hardware
+    else:
+        table = __table_net
+        mapping = __table_keys_net
+    statement = (
+        "SELECT * FROM %s "
+        'WHERE id = \"%s\"') % (table, id)
+    card = DB.select_query(statement)
+    if card:
         card = card[0]  # There should be only one card as answer from the query
-        for param in range(0, len(__table_keys)):
-            out[__table_keys[param]] = card[param]
+        for param in range(0, len(mapping)):
+            out[mapping[param]] = card[param]
+
     return out
 
 
-# TODO: Add already existing card control
 @inject
-def create_card(card, DB: MySQL):
-    values = {}
-    statement = ("INSERT INTO %s ") % __table
-    statement += "("
-    for x in range(0, len(__table_keys) - 1):
-        statement += __table_keys[x] + ","
-        values[__table_keys[x]] = card[__table_keys[x]]
-    statement += __table_keys[len(__table_keys) - 1] + ") "
-    statement += ("VALUES (")
-    last_val = __table_keys[len(__table_keys) - 1]
-    values[__table_keys[len(__table_keys) - 1]] = card[last_val]
-    for x in range(0, len(__table_keys) - 1):
-        statement += "%(" + __table_keys[x] + ")s,"
-    statement += "%(" + __table_keys[len(__table_keys) - 1] + ")s)"
-    DB.insert_query(statement, values)
-    #print (statement,values)
-    #else:
-    #    error = {}
-    #    error["detail"] = "The requested ID already exists on the server"
-    #    error["status"] = "304"
-    #    error["title"] = "Not Found"
-    #    return error
+def create_hardware_tag(card, DB: MySQL, EEM: EEM):
+    status, message = insert_card(
+        card,
+        __table_hardware,
+        __table_keys_hardware,
+        DB,
+        EEM)
+
+    if status:
+        return messenger.message200(message)
+    else:
+        return messenger.message404(message)
+
+
+@inject
+def create_net_tag(card, DB: MySQL, EEM: EEM):
+    status, message = insert_card(
+        card,
+        __table_net,
+        __table_keys_net,
+        DB,
+        EEM)
+
+    if status:
+        return messenger.message200(message)
+    else:
+        return messenger.message404(message)
+
+
+@inject
+def modify_hardware_tag(card, DB: MySQL, EEM: EEM):
+    status, message = modify_card(
+        card,
+        __table_hardware,
+        __table_keys_hardware,
+        DB,
+        EEM)
+
+    if status:
+        return messenger.message200(message)
+    else:
+        return messenger.message404(message)
+
+
+@inject
+def modify_net_tag(card, DB: MySQL, EEM: EEM):
+    status, message = modify_card(
+        card,
+        __table_net,
+        __table_keys_net,
+        DB,
+        EEM)
+
+    if status:
+        return messenger.message200(message)
+    else:
+        return messenger.message404(message)
 
 
 # TODO: Add does not exists card control
 @inject
 def erase_card(id, DB: MySQL):
-    statement = ("DELETE FROM %s ") % __table
-    statement += ("WHERE ID = ") + id
-    DB.select_query(statement)
+    pass
+    #DB.select_query(statement)
     #if res:
     #    return 200
     #else:

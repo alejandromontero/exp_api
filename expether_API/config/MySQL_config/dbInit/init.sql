@@ -13,7 +13,6 @@ CREATE TABLE IF NOT EXISTS workloads (
 	name varchar(255) NOT NULL,
 	requirement varchar(255),
 	assigned_to varchar(255),
-	active bool DEFAULT 0,
 	PRIMARY KEY (id),
 	FOREIGN KEY (assigned_to) REFERENCES servers(name)
 	);
@@ -33,9 +32,7 @@ CREATE TABLE IF NOT EXISTS hardware_cards (
 	model varchar(255),
 	pcie_vendor_id varchar(255),
 	pcie_device_id varchar(255),
-	assigned_to varchar(255),
-	PRIMARY KEY (id),
-	FOREIGN KEY(assigned_to) REFERENCES net_card(id)
+	PRIMARY KEY (id)
 	);
 
 CREATE TABLE IF NOT EXISTS assignaments (
