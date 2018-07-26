@@ -5,6 +5,8 @@ services:
         env_file: db_variables.env
         depends_on:
             - mysql
+        volumes:
+            - ./expether_API/www:/opt/API/api/../www
         ports: 
             - 5555:5555
 
@@ -13,8 +15,8 @@ services:
         env_file: 
             - db_variables.env
         volumes:
-            - ./data/mysql/data:/var/lib/mysql  
-            - ./expether_API/config/MySQL_config:/docker-entrypoint-initdb.d/:ro  
+            #- ./data/mysql/data:/var/lib/mysql  
+            - ./expether_API/config/MySQL_config/dbInit:/docker-entrypoint-initdb.d/:ro  
         ports:
             - 3306:3306 # In case there needs to be changed later 
 

@@ -1,5 +1,4 @@
 from random import choice as ranchoice
-from services.elasticsearch.elasticsearch import ElasticSearchIndex
 from services.mysql.mysqlDB import MySQL
 from services.eem.eem import EEM
 from flask_injector import inject

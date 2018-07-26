@@ -1,0 +1,43 @@
+{% extends "main.html" %}
+{% block table_style %}
+	table {
+		{% for key, value in tbl_style.items() %}
+			{{key}}: {{value}};
+		{% endfor %}
+	}
+	th {
+		{% for key, value in tbl_header.items() %}
+			{{key}}: {{value}};
+		{% endfor %}
+	}
+	td {
+		{% for key, value in tbl_body.items() %}
+			{{key}}: {{value}};
+		{% endfor %}
+	}
+	tr:nth-child(even) {background-color: {{background}};}
+	caption {
+		{% for key, value in caption.items() %}
+			{{key}}: {{value}};
+		{% endfor %}
+{% endblock %}
+{% block body %}
+	{% for doc in docs %}
+		<table>
+			<caption>{{doc["name"]}}</caption>
+			<tr>
+				{% for head in doc["mapping"] %}
+					<th>{{head}}</th>
+				{% endfor %}
+			</tr>
+			{% for row in doc["values"] %}
+				<tr>
+					{% for value in row.values() %}
+						<td>{{value}}</td>
+					{% endfor %}
+				</tr>
+			{% endfor %}
+		</table>
+	{% endfor %}
+{% endblock %}
+	

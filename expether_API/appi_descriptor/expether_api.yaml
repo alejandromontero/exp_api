@@ -188,6 +188,20 @@ paths:
                             type: string 
     
     /card_hardware:
+        get: 
+            operationId: api.cards.get_all_hardware_cards
+            tags: [
+                "EMM cards tags"
+                ]
+            description: Get a list with the info of all tagged hardware cards 
+            responses:
+                '200':
+                    description: 'Box tag created succesfully'
+                    schema:
+                        type: array
+                        items:
+                            $ref: '#/definitions/HardwareTag'
+
         post:
             operationId: api.cards.create_hardware_tag
             tags: [
@@ -232,6 +246,20 @@ paths:
 
     
     /card_net:
+        get: 
+            operationId: api.cards.get_all_network_cards
+            tags: [
+                "EMM cards tags"
+                ]
+            description: Get a list with the info of all tagged network cards 
+            responses:
+                '200':
+                    description: 'Box tag created succesfully'
+                    schema:
+                        type: array
+                        items:
+                            $ref: '#/definitions/NetTag'
+
         post:
             operationId: api.cards.create_net_tag
             tags: [
@@ -314,6 +342,30 @@ paths:
                     description: 'Tag eliminated'
                 '404':
                     description: 'Tag not found'
+
+    /global_state:
+        get:
+            operationId: api.global.get_state
+            tags: [
+                "EEM global state"
+                ]
+            description: Retrieve an HTML file with the EEM global state
+            responses:
+                '200':
+                    description: 'HTML generated'
+
+
+        post:
+            operationId: api.global.update_state
+            tags: [
+                "EEM global state"
+                ]
+            description: Update the global state of the EEM DB
+            responses:
+                '200':
+                    description: 'Success'
+                '404':
+                    description: 'Failed update'
 
 definitions:
     Assignament:

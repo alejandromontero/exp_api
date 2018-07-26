@@ -64,3 +64,7 @@ class EEM(object):
             port]
 
         return self.get_cmd() + expanded_cmd
+
+    def get_all_logical_assigned(self):
+        expanded_cmd = ['get', '--all']
+        return self.make_request(expanded_cmd)

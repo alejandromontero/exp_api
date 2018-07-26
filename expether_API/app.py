@@ -44,9 +44,15 @@ if __name__ == '__main__':
         os.path.dirname(__file__),
         "config", "EEM", "eemcli.conf"
         )
+
     __eemBasePath = os.path.join(
         "/", "opt", "eemCli"
         )
+
+    #__eemBasePath = os.path.join(
+    #    os.path.dirname(__file__),
+    #    "..", "eemCli"
+    #    )
 
     app = connexion.FlaskApp(__name__, specification_dir='appi_descriptor/')
     app.add_api('expether_api.yaml', resolver=RestyResolver('api'))

@@ -7,6 +7,7 @@ from flask_injector import inject
 from config.MySQL_config.MySQL_config import hardware_card_mapping as mapping_hardware
 from config.MySQL_config.MySQL_config import net_card_mapping as mapping_net
 from utilities.messages import messenger
+from collections import Iterable
 from flask import (
         make_response,
         abort
@@ -61,6 +62,19 @@ def modify_card(card, table, mapping, DB, EEM):
         card["id"])
 
 
+def get_DB_info_cards(mapping, card_type, DB, EEM):
+    out = []
+    cards = get_all_cards(DB, EEM)
+    for card in cards:
+        card = get_card(card, DB, EEM)
+        if card["status"] == card_type:
+            card_out = {}
+            for param in range(0, len(mapping)):
+                card_out[mapping[param]] = card[mapping[param]]
+            out.append(card_out)
+    return out
+
+
 @inject
 def get_all_cards(DB: MySQL, EEM: EEM):
     out = EEM.get_list()
@@ -92,11 +106,35 @@ def get_card(id, DB: MySQL, EEM: EEM):
         'WHERE id = \"%s\"') % (table, id)
     card = DB.select_query(statement)
     if card:
-        card = card[0]  # There should be only one card as answer from the query
+        if(isinstance(card, Iterable) and not isinstance(card, str)):
+            card = next(iter(card))
         for param in range(0, len(mapping)):
             out[mapping[param]] = card[param]
-
+    else:
+        for param in range(0, len(mapping)):
+            if mapping[param] != "id":
+                out[mapping[param]] = "UNKNOWN"
     return out
+
+
+@inject
+def get_all_hardware_cards(DB: MySQL, EEM: EEM):
+    return get_DB_info_cards(
+        __table_keys_hardware,
+        "eeio",
+        DB,
+        EEM
+    )
+
+
+@inject
+def get_all_network_cards(DB: MySQL, EEM: EEM):
+    return get_DB_info_cards(
+        __table_keys_net,
+        "eesv",
+        DB,
+        EEM
+    )
 
 
 @inject

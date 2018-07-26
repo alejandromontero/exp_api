@@ -133,7 +133,7 @@ class MySQL(object):
         try:
             cursor.execute(statement)
         except (Error, Warning) as err:
-            print(err)
+            return (False, str(err))
 
         cursor.close()
         cnx.commit()
