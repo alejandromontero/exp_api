@@ -1,7 +1,7 @@
 version: '3'
 services:
     api:
-        image: apitest
+        image: eem_api
         env_file: db_variables.env
         depends_on:
             - mysql

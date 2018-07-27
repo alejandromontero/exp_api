@@ -68,10 +68,16 @@ class MySQL(object):
         statement += "VALUES ("
         for x in range(0, len(mapping) - 1):
             statement += "%(" + mapping[x] + ")s, "
-            values[mapping[x]] = '%s' % (data[x])
+            if data[x] is not None:
+                values[mapping[x]] = '%s' % (data[x])
+            else:
+                values[mapping[x]] = None
 
         statement += "%(" + mapping[-1] + ")s)"
-        values[mapping[-1]] = '%s' % (data[-1])
+        if data[-1] is not None:
+            values[mapping[-1]] = '%s' % (data[-1])
+        else:
+            values[mapping[-1]] = None
 
         cnx = self.connection()
         cursor = cnx.cursor()
@@ -126,6 +132,25 @@ class MySQL(object):
         for x in range(0, len(mapping) - 1):
             statement += '%s = "%s" AND ' % (mapping[x], data[x])
         statement += '%s = "%s"' % (mapping[-1], data[-1])
+
+        cnx = self.connection()
+        cursor = cnx.cursor()
+
+        try:
+            cursor.execute(statement)
+        except (Error, Warning) as err:
+            return (False, str(err))
+
+        cursor.close()
+        cnx.commit()
+        cursor.close()
+        return (True, "OK")
+
+    def delete_query_simple(self, table, field, value):
+        statement = (
+            "DELETE FROM %s "
+            'WHERE %s = "%s"'
+            ) % (table, field, value)
 
         cnx = self.connection()
         cursor = cnx.cursor()

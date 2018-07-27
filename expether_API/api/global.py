@@ -8,6 +8,8 @@ from api.assignaments import get_all_assignaments
 from api.workloads import get_all_workloads
 from api.cards import get_all_hardware_cards
 from api.cards import get_all_network_cards
+from config.MySQL_config.MySQL_config import hardware_card_mapping
+from config.MySQL_config.MySQL_config import net_card_mapping
 from utilities.html import html
 from utilities.eemParser import eemParser
 from collections import Iterable
@@ -80,7 +82,9 @@ def get_next_id(DB):
     while (isinstance(id, Iterable)):
         id = next(iter(id))
 
-    if id >= 0:
+    if not id:
+        return -1
+    elif id >= 0:
         return -1
     else:
         return id - 1
@@ -107,37 +111,156 @@ def dumb_html_file(filename, html):
         file.write(html)
 
 
+def update_assigned_cards(cards, DB):
+    assigned_cards = []
+    for card in cards:
+        parsed_card = eemParser.parse(card)
+        if (
+            parsed_card["status"] == "eeio" and
+            parsed_card["group_id"] != __NON_USED_HARDWARE_GROUP_NUMBER
+        ):
+            assigned_cards.append(
+                {
+                    "id": parsed_card["id"],
+                    "group_id": parsed_card["group_id"],
+                }
+            )
+
+    # Get API assignaments that have a hardware card assigned to a
+    # Net card with the corresponding GID
+    for card in assigned_cards:
+        net_card = get_network_card(card["group_id"], DB)
+        if is_ghost_assignament(card["id"], net_card, DB):
+            # First, generate a new workload with unknown data
+            id = get_next_id(DB)
+            server = get_workload_server(card["group_id"], DB)
+            values = [id, "UNKNOWN", "UNKNOWN", server]
+            status, message = DB.insert_query(
+                "workloads",
+                __work_mapping,
+                values)
+            if not status:
+                return (status, message)
+
+            # Second, generate a new ghost assignament
+            values = [card["id"], net_card, id]
+            status, message = DB.insert_query(
+                "assignaments",
+                __assig_mapping,
+                values)
+
+            if not status:
+                return (status, values)
+                return (status, message)
+    return (True, 'OK')
+
+
+# TODO: Is there a way to discover the server by using the GID???
+def update_net_card(card, DB):
+    mapping = list(net_card_mapping.keys())
+    values = []
+    for field in mapping:
+        if field in card:
+            values.append(card[field])
+        else:
+            if field == "gid":
+                values.append(card["group_id"])
+            else:
+                values.append(None)
+
+    return DB.insert_query(
+        "net_card",
+        mapping,
+        values)
+
+
+def update_hardware_card(card, DB):
+    mapping = list(hardware_card_mapping.keys())
+    values = []
+    for field in mapping:
+        if field in card and field != "model":
+            values.append(card[field])
+        else:
+            values.append("UNKNOWN")
+
+    return DB.insert_query(
+        "hardware_cards",
+        mapping,
+        values)
+
+
+def update_cards(cards, DB):
+    DB_cards = []
+    statement = (
+        "SELECT id "
+        "FROM hardware_cards"
+    )
+    statement2 = (
+        "SELECT id "
+        "FROM net_card"
+    )
+    for DB_card in DB.select_query(statement):
+        while (isinstance(DB_card, Iterable) and not isinstance(DB_card, str)):
+            DB_card = next(iter(DB_card))
+        DB_cards.append(DB_card)
+    for DB_card in DB.select_query(statement2):
+        while (isinstance(DB_card, Iterable) and not isinstance(DB_card, str)):
+            DB_card = next(iter(DB_card))
+        DB_cards.append(DB_card)
+    for card in cards:
+        status = True
+        card = eemParser.parse(card)
+        if card["id"] not in DB_cards:
+            if card["status"] == "eeio":
+                status, message = update_hardware_card(card, DB)
+            else:
+                status, message = update_net_card(card, DB)
+
+            if not status:
+                return messenger.general_error(message)
+
+    return messenger.message200('OK')
+
+
 @inject
 def get_state(DB: MySQL, EEM: EEM):
     docs = []
-    docs.append(
-        {
-            "name": "assignaments",
-            "mapping": __assig_mapping,
-            "values": get_all_assignaments(DB)
-        }
-    )
-    docs.append(
-        {
-            "name": "workloads",
-            "mapping": __work_mapping,
-            "values": get_all_workloads(DB)
-        }
-    )
-    docs.append(
-        {
-            "name": "hardware cards",
-            "mapping": __hardw_mapping,
-            "values": get_all_hardware_cards(DB, EEM)
-        }
-    )
-    docs.append(
-        {
-            "name": "network cards",
-            "mapping": __net_mapping,
-            "values": get_all_network_cards(DB, EEM)
-        }
-    )
+    assignaments = get_all_assignaments(DB)
+    if "status" not in assignaments:
+        docs.append(
+            {
+                "name": "assignaments",
+                "mapping": __assig_mapping,
+                "values": assignaments
+            }
+        )
+    workloads = get_all_workloads(DB)
+    if "status" not in workloads:
+        docs.append(
+            {
+                "name": "workloads",
+                "mapping": __work_mapping,
+                "values": workloads
+            }
+        )
+    hardw_cards = get_all_hardware_cards(DB, EEM)
+    if "status" not in hardw_cards:
+        docs.append(
+            {
+                "name": "hardware cards",
+                "mapping": __hardw_mapping,
+                "values": hardw_cards
+            }
+        )
+    net_cards = get_all_network_cards(DB, EEM)
+    if "status" not in net_cards:
+        docs.append(
+            {
+                "name": "network cards",
+                "mapping": __net_mapping,
+                "values": net_cards
+            }
+        )
     html_file = html.generate_table_jinja(docs)
     dumb_html_file("global_state.html", html_file)
 
@@ -156,46 +279,9 @@ def update_state(DB: MySQL, EEM: EEM):
             cards[n_cards] += line + '\n'
         else:
             n_cards += 1
-
-    assigned_cards = []
-    for card in cards:
-        parsed_card = eemParser.parse(card)
-        if (
-            parsed_card["status"] == "eeio" and
-            parsed_card["group_id"] != __NON_USED_HARDWARE_GROUP_NUMBER
-        ):
-            assigned_cards.append(
-                {
-                    "id": parsed_card["id"],
-                    "group_id": parsed_card["group_id"],
-                }
-            )
-
-    # Get API assignaments that are have a hardware card assigned to a
-    # Net card with the corresponding GID
-    for card in assigned_cards:
-        net_card = get_network_card(card["group_id"], DB)
-        if is_ghost_assignament(card["id"], net_card, DB):
-            # First, generate a new workload with unknown data
-            id = get_next_id(DB)
-            server = get_workload_server(card["group_id"], DB)
-            values = [id, "UNKNOWN", "UNKNOWN", server]
-            status, message = DB.insert_query(
-                "workloads",
-                __work_mapping,
-                values)
-            if not status:
-                return messenger.general_error(message)
-
-            # Second, generate a new ghost assignament
-            values = [card["id"], net_card, id]
-            status, message = DB.insert_query(
-                "assignaments",
-                __assig_mapping,
-                values)
-
-            if not status:
-                return messenger.general_error(message)
-
-            else:
-                return messenger.message200('OK')
+    status, message = update_cards(cards, DB)
+    status, message = update_assigned_cards(cards, DB)
+    if status:
+        return messenger.message200('OK')
+    else:
+        return messenger.general_error(message)

@@ -199,14 +199,18 @@ def modify_net_tag(card, DB: MySQL, EEM: EEM):
 
 # TODO: Add does not exists card control
 @inject
-def erase_card(id, DB: MySQL):
-    pass
-    #DB.select_query(statement)
-    #if res:
-    #    return 200
-    #else:
-    #    error = {}
-    #    error["detail"] = "The requested ID does not exist"
-    #    error["status"] = "404"
-    #    error["title"] = "Not Found"
-    #    return error
+def erase_card(id, DB: MySQL, EEM: EEM):
+    if get_card(id, DB, EEM)["status"] == "eeio":
+        table = __table_hardware
+    else:
+        table = __table_net
+
+    status, message = DB.delete_query_simple(
+        table,
+        "id",
+        id
+    )
+    if status:
+        return messenger.message200(message)
+    else:
+        return messenger.message404(message)

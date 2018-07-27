@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS workloads (
 CREATE TABLE IF NOT EXISTS net_card (
 	id varchar(255) NOT NULL,
 	gid int NOT NULL,
-	assigned_to varchar(255),
+	assigned_to varchar(255) NULL,
 	PRIMARY KEY(id),
 	FOREIGN KEY(assigned_to) REFERENCES servers(name)
 	);
