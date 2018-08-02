@@ -15,7 +15,8 @@ from utilities.eemParser import eemParser
 from collections import Iterable
 from flask import (
     make_response,
-    abort
+    abort,
+    render_template
 )
 from config.MySQL_config.MySQL_config import (
     workload_mapping,
@@ -32,6 +33,7 @@ __hardw_mapping = list(hardware_card_mapping.keys())
 __net_mapping = list(net_card_mapping.keys())
 __serv_mapping = list(servers_mapping.keys())
 __assig_mapping = list(assignament_mapping.keys())
+__state_html_filename = "global_state.html"
 __html_dumb_folder = os.path.join(
     os.path.dirname(__file__),
     "..", "www"
@@ -102,14 +104,24 @@ def get_workload_server(gid, DB):
     return server  # For some reason the above loop never converges
 
 
-def dumb_html_file(filename, html):
+def dumb_html_file(html):
     dumb_file = os.path.join(
         __html_dumb_folder,
-        filename
+        __state_html_filename
     )
     with open(dumb_file, 'w') as file:
         file.write(html)
 
+def read_html_file():
+    dumb_file = os.path.join(
+        __html_dumb_folder,
+        __state_html_filename
+    )
+    if os.path.exists(dumb_file):
+        with open(dumb_file, 'r') as file:
+            return file.read()
+    else:
+        return False
 
 def update_assigned_cards(cards, DB):
     assigned_cards = []
@@ -222,8 +234,7 @@ def update_cards(cards, DB):
     return messenger.message200('OK')
 
 
-@inject
-def get_state(DB: MySQL, EEM: EEM):
+def create_state_html(DB, EEM):
     docs = []
     assignaments = get_all_assignaments(DB)
     if "status" not in assignaments:
@@ -262,7 +273,17 @@ def get_state(DB: MySQL, EEM: EEM):
             }
         )
     html_file = html.generate_table_jinja(docs)
-    dumb_html_file("global_state.html", html_file)
+    dumb_html_file(html_file)
+
+
+@inject
+def get_state(DB: MySQL, EEM: EEM):
+    html = read_html_file()
+    if html:
+        return make_response(html)
+
+    else:
+        return messenger.message404("No state found, try executing POST fist")
 
 
 @inject
@@ -281,7 +302,7 @@ def update_state(DB: MySQL, EEM: EEM):
             n_cards += 1
     status, message = update_cards(cards, DB)
     status, message = update_assigned_cards(cards, DB)
-    if status:
-        return messenger.message200('OK')
-    else:
+    if not status:
         return messenger.general_error(message)
+    create_state_html(DB, EEM)
+    return messenger.message200('OK')

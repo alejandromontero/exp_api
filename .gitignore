@@ -7,6 +7,9 @@ VPN/
 # EEM client 
 eemCli
 
+# www files
+global_state.html
+
 # Byte compiled Python for optimization
 __pycache__/
 *.pyc
