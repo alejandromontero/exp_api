@@ -2,7 +2,7 @@ version: '3'
 services:
     api:
         image: eem_api
-        env_file: db_variables.env
+        env_file: config.env
         depends_on:
             - mysql
         volumes:
@@ -13,7 +13,7 @@ services:
     mysql:
         image: mysql:5.7
         env_file: 
-            - db_variables.env
+            - config.env
         volumes:
             #- ./data/mysql/data:/var/lib/mysql  
             - ./expether_API/config/MySQL_config/dbInit:/docker-entrypoint-initdb.d/:ro  

@@ -12,11 +12,11 @@
 
 ## IP address of EEM REST service.
 ## (default: 127.0.0.1)
-server_ip=192.168.122.127
+server_ip=##EEM_IP##
 
 ## Port number of EEM REST service.
 ## (default: 30500)
-server_port=30500
+server_port=##EEM_PORT##
 
 ## Time out of HTTP(S) session.
 ## 'timeout' must be positive integer.
