@@ -170,7 +170,10 @@ def create_assignament(workload, DB: MySQL, EEM: EEM):
         workload_requirement = next(iter(workload_requirement))
         if isinstance(workload_requirement, Iterable):
             workload_requirement = next(iter(workload_requirement))
-
+    else:
+        message = "Workload does not exist or "
+        message += "does not have any requirements"
+        return messenger.message404(message)
     # Retrieve server EEM net card and GID
     workload_server_net_card, gid = get_server_card(workload_id, DB)
     if not workload_server_net_card:
@@ -193,7 +196,6 @@ def create_assignament(workload, DB: MySQL, EEM: EEM):
                             workload_requirement)
                     message += "is already assigned to the server; "
                     message += "new assignament created"
-                    return messenger.message200(message)
                 else:
                     return messenger.general_error(message)
 
@@ -206,12 +208,13 @@ def create_assignament(workload, DB: MySQL, EEM: EEM):
                 __table,
                 __table_keys,
                 values)
+        status = True
         if status:
-            return messenger.mesage200Debug(
+            EEM.assign_hardware_to_server(box, gid)
+            return messenger.message200(
                 "New VLAN created between %s and %s" % (
                     box,
                     workload_server_net_card),
-                EEM.assign_hardware_to_server(box, gid)
             )
         else:
             return messenger.general_error(message)
@@ -226,6 +229,9 @@ def erase_assignament(workload, DB: MySQL, EEM: EEM):
     workload_id = next(iter(workload.values()))
     # Retrieve server EEM net card and GID
     workload_server_net_card, gid = get_server_card(workload_id, DB)
+    if not workload_server_net_card:
+        message = "Workload does not exist or is not assigned to any server"
+        return messenger.message404(message)
     downs_port = get_card(workload_server_net_card, DB, EEM)["downstream_port"]
     if downs_port == "All down":
         message = (
@@ -243,20 +249,21 @@ def erase_assignament(workload, DB: MySQL, EEM: EEM):
         return messenger.message404(message)
 
     values = [assigned_hardware, workload_server_net_card, workload_id]
-    status, message = DB.delete_query(
-            __table,
-            __table_keys,
-            values)
 
     if is_feasible_to_unasign_hardware(
             assigned_hardware,
             workload_server_net_card,
             DB):
-        return messenger.mesage200Debug(
+        EEM.disconect_hardware_from_server(assigned_hardware)
+        status, message = DB.delete_query(
+            __table,
+            __table_keys,
+            values)
+
+        return messenger.message200(
             "VLAN erased between %s and %s" % (
                 assigned_hardware,
                 workload_server_net_card),
-            EEM.disconect_hardware_from_server(gid, downs_port)
         )
 
     else:

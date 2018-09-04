@@ -8,12 +8,6 @@ VALUES
 ("brain1", "01"),
 ("brain2", "02");
 
-INSERT INTO workloads(name,requirement,assigned_to)
-VALUES
-("test1", "GPU", "brain1"), 
-("test2", "FPGA", "bscdc13"), 
-("test3", "NMVE", "bscdc14");
-
 INSERT INTO net_card(id,gid,assigned_to)
 VALUES
 ("0x743a65046d30", "1012", "bscdc12"),
@@ -26,9 +20,8 @@ VALUES
 
 INSERT INTO hardware_cards(id,hardware,model,pcie_vendor_id,pcie_device_id)
 VALUES
-("0x8cdf9d9122b6", "FPGA", "Nallatech 510t", "10b5", "8732"),
-("0x8cdf9d9122b0", "FPGA", "Bittware A10PL4", "10b5", "8718"),
-("0x8cdf9d9122b2", "OPTANE", "Device 2701","8086","2701"),
+("0x743a65043e28", "FPGA", "Bittware A10PL4", "10b5", "8718"),
+("0x743a65043e2a", "NVME", "Optane 2701", "8086", "2701"),
 ("0x8cdf9dd32010", "FPGA", "PAC10", "8086", "09c4"),
 ("0x8cdf9dd32012", "GPU", "Tesla K40", "10de", "1024");
 

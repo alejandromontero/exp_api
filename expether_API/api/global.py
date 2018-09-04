@@ -291,6 +291,8 @@ def update_state(DB: MySQL, EEM: EEM):
     n_cards = 0
     cards = []
     for line in EEM.get_all_logical_assigned().splitlines():
+        if "[Errno 113]" in line:
+            return messenger.message404("No route to EEM")
         if (
             line != "----------------------------------------" and
             "timestamp:" not in line

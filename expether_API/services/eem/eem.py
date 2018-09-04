@@ -45,25 +45,24 @@ class EEM(object):
         return self.make_request(expanded_cmd)
 
     def assign_hardware_to_server(self, hardware_box, gid):
-        # eemcli set_gid -i 0x8.... -g $(( 1000 + server_number ))
+        if isinstance(gid, int):
+            gid = '%s' % gid
         expanded_cmd = [
             "set_gid",
             "-i",
             hardware_box,
             "-g",
             gid]
+        #  return self.get_cmd() + expanded_cmd
+        return self.make_request(expanded_cmd)
 
-        return self.get_cmd() + expanded_cmd
-
-    def disconect_hardware_from_server(self, gid, port):
+    def disconect_hardware_from_server(self, hardware_box):
         expanded_cmd = [
-            "del_iomac",
+            "del_gid",
             "-i",
-            gid,
-            "--port",
-            port]
-
-        return self.get_cmd() + expanded_cmd
+            hardware_box]
+        return self.make_request(expanded_cmd)
+        #return self.get_cmd() + expanded_cmd
 
     def get_all_logical_assigned(self):
         expanded_cmd = ['get', '--all']

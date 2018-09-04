@@ -404,9 +404,9 @@ definitions:
             model:
                 type: string
             pcie_vendor_id:
-                type: number
+                type: string
             pcie_device_id:
-                type: number
+                type: string
 
     NetTag:
         type: object
