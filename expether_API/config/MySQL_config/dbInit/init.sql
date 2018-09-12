@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS hardware_cards (
 	PRIMARY KEY (id)
 	);
 
-CREATE TABLE IF NOT EXISTS assignaments (
+CREATE TABLE IF NOT EXISTS assignments (
 	hardware_card varchar(255) NOT NULL,
 	server_card varchar (255) NOT NULL,
 	workload int NOT NULL,

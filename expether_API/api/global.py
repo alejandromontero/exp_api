@@ -4,7 +4,7 @@ from services.eem.eem import EEM
 from flask_injector import inject
 from api.cards import get_card
 from utilities.messages import messenger
-from api.assignaments import get_all_assignaments
+from api.assignments import get_all_assignments
 from api.workloads import get_all_workloads
 from api.cards import get_all_hardware_cards
 from api.cards import get_all_network_cards
@@ -24,7 +24,7 @@ from config.MySQL_config.MySQL_config import (
     hardware_card_mapping,
     net_card_mapping,
     servers_mapping,
-    assignament_mapping
+    assignment_mapping
 )
 
 
@@ -34,7 +34,7 @@ __work_mapping_extended = list(workload_mapping_extended.keys())
 __hardw_mapping = list(hardware_card_mapping.keys())
 __net_mapping = list(net_card_mapping.keys())
 __serv_mapping = list(servers_mapping.keys())
-__assig_mapping = list(assignament_mapping.keys())
+__assig_mapping = list(assignment_mapping.keys())
 __state_html_filename = "global_state.html"
 __html_dumb_folder = os.path.join(
     os.path.dirname(__file__),
@@ -52,14 +52,14 @@ __assig_mapping_extended = [
 
 
 
-# Return whether an assignament was performed by the API
+# Return whether an assignment was performed by the API
 # For now we are limited to test whether there is a row in the DB
 # That assigns a hardware card to a net card, even if there are other
 # Assignaments performed manually by the user
-def is_ghost_assignament(hard_card, net_card, DB):
+def is_ghost_assignment(hard_card, net_card, DB):
     statement = (
         "SELECT COUNT(*) "
-        "FROM assignaments "
+        "FROM assignments "
         'WHERE hardware_card = "%s" '
         "AND "
         'server_card = "%s"'
@@ -140,7 +140,7 @@ def update_assigned_cards(cards, DB):
                 }
             )
 
-    # Get API assignaments that have a hardware card assigned to a
+    # Get API assignments that have a hardware card assigned to a
     # Net card with the corresponding GID
     for card in assigned_cards:
         net_card = get_from_DB_simple(
@@ -149,7 +149,7 @@ def update_assigned_cards(cards, DB):
             "gid",
             card["group_id"],
             DB)
-        if is_ghost_assignament(card["id"], net_card, DB):
+        if is_ghost_assignment(card["id"], net_card, DB):
             # First, generate a new workload with unknown data
             id = get_next_id(DB)
             server = get_from_DB_simple(
@@ -158,7 +158,6 @@ def update_assigned_cards(cards, DB):
                 "gid",
                 card["group_id"],
                 DB)
-            return server
             values = [id, "UNKNOWN", "UNKNOWN", "UNKNOWN", server]
             status, message = DB.insert_query(
                 "workloads",
@@ -167,10 +166,10 @@ def update_assigned_cards(cards, DB):
             if not status:
                 return (status, message)
 
-            # Second, generate a new ghost assignament
+            # Second, generate a new ghost assignment
             values = [card["id"], net_card, id]
             status, message = DB.insert_query(
-                "assignaments",
+                "assignments",
                 __assig_mapping,
                 values)
 
@@ -249,54 +248,54 @@ def update_cards(cards, DB):
 
 def create_state_html(DB, EEM):
     docs = []
-    assignaments = get_all_assignaments(DB)
-    if "status" not in assignaments:
-        assignaments_extended = []
-        for assignament in assignaments:
-            assignament_extended = assignament
+    assignments = get_all_assignments(DB)
+    if "status" not in assignments:
+        assignments_extended = []
+        for assignment in assignments:
+            assignment_extended = assignment
 
-            assignament_extended["hardware_type"] = get_from_DB_simple(
+            assignment_extended["hardware_type"] = get_from_DB_simple(
                 "hardware",
                 "hardware_cards",
                 "id",
-                assignament["hardware_card"],
+                assignment["hardware_card"],
                 DB)
 
-            assignament_extended["hardware_model"] = get_from_DB_simple(
+            assignment_extended["hardware_model"] = get_from_DB_simple(
                 "model",
                 "hardware_cards",
                 "id",
-                assignament["hardware_card"],
+                assignment["hardware_card"],
                 DB)
 
-            assignament_extended["server_name"] = get_from_DB_simple(
+            assignment_extended["server_name"] = get_from_DB_simple(
                 "assigned_to",
                 "net_card",
                 "id",
-                assignament["server_card"],
+                assignment["server_card"],
                 DB)
 
-            assignament_extended["user"] = get_from_DB_simple(
+            assignment_extended["user"] = get_from_DB_simple(
                 "user",
                 "workloads",
                 "id",
-                assignament["workload"],
+                assignment["workload"],
                 DB)
 
-            assignament_extended["description"] = get_from_DB_simple(
+            assignment_extended["description"] = get_from_DB_simple(
                 "description",
                 "workloads",
                 "id",
-                assignament["workload"],
+                assignment["workload"],
                 DB)
 
-            assignaments_extended.append(assignament_extended)
+            assignments_extended.append(assignment_extended)
 
         docs.append(
             {
-                "name": "assignaments",
+                "name": "assignments",
                 "mapping": __assig_mapping_extended,
-                "values": assignaments_extended
+                "values": assignments_extended
             }
         )
     workloads = get_all_workloads(DB)

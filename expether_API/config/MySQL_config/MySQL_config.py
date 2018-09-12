@@ -42,7 +42,7 @@ servers_mapping = {
         "number": "int"
         }
 
-assignament_mapping = {
+assignment_mapping = {
         "hardware_card": "varchar(255)",
         "server_card": "varchar(255)",
         "workload": "int"

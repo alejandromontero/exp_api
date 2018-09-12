@@ -1,2 +1,2 @@
 #import api.people
-import api.assignaments
+import api.assignments

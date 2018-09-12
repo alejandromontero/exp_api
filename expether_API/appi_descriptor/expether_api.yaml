@@ -12,27 +12,27 @@ produces:
 basePath: /api
 
 paths:
-    /assignament:
+    /assignment:
         get:
-            operationId: api.assignaments.get_all_assignaments
+            operationId: api.assignments.get_all_assignments
             tags: [ 
-                "assignaments"
+                "assignments"
                 ]
-            description: Read the entire list of assignaments
+            description: Read the entire list of assignments
             responses:
                 '200':
-                    description: 'List of assignaments'
+                    description: 'List of assignments'
                     schema:
                         type: array
                         items:
                             $ref: '#/definitions/Assignament'
 
         post:
-            operationId: api.assignaments.create_assignament
+            operationId: api.assignments.create_assignment
             tags: [
-                "assignaments"
+                "assignments"
                 ]
-            description: Make an assignament 
+            description: Make an assignment 
             consumes:
                 - application/json
             parameters:
@@ -53,17 +53,17 @@ paths:
                     description: 'Assignament unssuccesful'
 
         delete:
-            operationId: api.assignaments.erase_assignament
+            operationId: api.assignments.erase_assignment
             tags: [
-                "assignaments"
+                "assignments"
                 ]
-            description: Eliminate assignament
+            description: Eliminate assignment
             consumes:
                 - application/json
             parameters:
                 - in: body
                   name: workload
-                  description: Workload whose assignament to eliminate
+                  description: Workload whose assignment to eliminate
                   schema:
                       type: object
                       properties:
@@ -123,7 +123,7 @@ paths:
                   name: id
                   required: true
                   type: string
-                  description: ID of the assignament to query
+                  description: ID of the assignment to query
             responses:
                 '200':
                     description: 'Assignament found'
@@ -144,7 +144,7 @@ paths:
                   name: id
                   required: true
                   type: string
-                  description: ID of the assignament to query
+                  description: ID of the assignment to query
             responses:
                 '200':
                     description: 'Assignament eliminated'

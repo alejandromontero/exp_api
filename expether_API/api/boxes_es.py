@@ -11,8 +11,8 @@ from flask import (
         abort
 )
 
-__index = "assignaments"
-__doc_type = "assignament"
+__index = "assignments"
+__doc_type = "assignment"
 __eemcly = os.path.join(
             os.path.dirname(__file__),
             '..', 'eem_api', 'eemcli', 'eemcli.py'
@@ -49,9 +49,9 @@ def get_box_info(id, indexer: ElasticSearchIndex):
     
 
 @inject
-def create_tag(assignament, indexer: ElasticSearchIndex):
+def create_tag(assignment, indexer: ElasticSearchIndex):
     res = indexer.add_doc(
-            assignament, __index, __doc_type, mapping)
+            assignment, __index, __doc_type, mapping)
     if res:
         return 200
     else:

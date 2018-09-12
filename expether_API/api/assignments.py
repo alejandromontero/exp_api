@@ -2,7 +2,7 @@ from random import choice as ranchoice
 from services.mysql.mysqlDB import MySQL
 from services.eem.eem import EEM
 from flask_injector import inject
-from config.MySQL_config.MySQL_config import assignament_mapping as mapping
+from config.MySQL_config.MySQL_config import assignment_mapping as mapping
 from api.cards import get_card
 from utilities.messages import messenger
 from collections import Iterable
@@ -11,8 +11,8 @@ from flask import (
         abort
 )
 
-__table = "assignaments"
-__doc_type = "assignament"
+__table = "assignments"
+__doc_type = "assignment"
 __table_keys = list(mapping.keys())
 __NON_USED_HARDWARE_GROUP_NUMBER = "4093"
 
@@ -31,7 +31,7 @@ def is_feasible_to_asign_hardware(hardware, DB, EEM):
 def is_feasible_to_unasign_hardware(assigned_hardware, server_card, DB):
     statement = (
         "SELECT COUNT(*) "
-        "FROM assignaments "
+        "FROM assignments "
         'WHERE hardware_card = "%s" '
         "AND "
         'server_card = "%s"'
@@ -72,7 +72,7 @@ def get_server_card(workload_id, DB):
 def get_assigned_hardware_cards(workload_id, DB):
     statement = (
         "SELECT hardware_card "
-        "FROM assignaments "
+        "FROM assignments "
         "WHERE server_card = ( "
             "SELECT id FROM net_card "
             "WHERE assigned_to = ( "
@@ -107,10 +107,10 @@ def get_available_hardware(hardware_type, DB, EEM):
 
 
 # Return the hardware card assigned to the workload
-def get_assignament_hardware(workload_id, DB):
+def get_assignment_hardware(workload_id, DB):
     statement = (
         "SELECT hardware_card "
-        "FROM assignaments "
+        "FROM assignments "
         "WHERE workload = %s "
         ) % workload_id
     result = DB.select_query(statement)
@@ -126,24 +126,24 @@ def select_hardware(hardware):
 
 
 @inject
-def get_all_assignaments(DB: MySQL):
+def get_all_assignments(DB: MySQL):
     statement = ("SELECT * FROM %s ") % __table
-    assignaments = DB.select_query(statement)
-    res_assignaments = []
-    if assignaments:
-        for assignament in assignaments:
-            res_assignament = {}
+    assignments = DB.select_query(statement)
+    res_assignments = []
+    if assignments:
+        for assignment in assignments:
+            res_assignment = {}
             for x in range(0, len(__table_keys)):
-                res_assignament[__table_keys[x]] = assignament[x]
-            res_assignaments.append(res_assignament)
-        return res_assignaments
+                res_assignment[__table_keys[x]] = assignment[x]
+            res_assignments.append(res_assignment)
+        return res_assignments
 
     else:
-        return messenger.message404("No assignaments found")
+        return messenger.message404("No assignments found")
 
 
 @inject
-def create_assignament(workload, DB: MySQL, EEM: EEM):
+def create_assignment(workload, DB: MySQL, EEM: EEM):
     workload_id = next(iter(workload.values()))
     statement = ("SELECT * FROM requirements ")
     statement += ("WHERE workload_id = %s") % workload_id
@@ -178,7 +178,7 @@ def create_assignament(workload, DB: MySQL, EEM: EEM):
                             box,
                             requirement[1])
                         message_assignation += "is already assigned to the server; "
-                        message_assignation += "new assignament created "
+                        message_assignation += "new assignment created "
                     else:
                         message = "The assignment already exists, exiting..."
                         return messenger.message409(message)
@@ -216,7 +216,7 @@ def create_assignament(workload, DB: MySQL, EEM: EEM):
 
 
 @inject
-def erase_assignament(workload, DB: MySQL, EEM: EEM):
+def erase_assignment(workload, DB: MySQL, EEM: EEM):
     workload_id = next(iter(workload.values()))
     # Retrieve server EEM net card and GID
     workload_server_net_card, gid = get_server_card(workload_id, DB)
@@ -231,7 +231,7 @@ def erase_assignament(workload, DB: MySQL, EEM: EEM):
             % workload_server_net_card)
         return messenger.message404(message)
     downs_port = downs_port["downstream_port_id"]
-    assigned_cards = get_assignament_hardware(workload_id, DB)
+    assigned_cards = get_assignment_hardware(workload_id, DB)
     if not assigned_cards:
         message = (
             "Cannot erase assignment as the workload does not "
@@ -258,8 +258,8 @@ def erase_assignament(workload, DB: MySQL, EEM: EEM):
         else:
             erase_message += (
                 "VLAN between %s and %s could't be erased as "
-                "there are other assignaments in progress, "
-                "DB assignament erased"
+                "there are other assignments in progress, "
+                "DB assignment erased"
             ) % (assigned_hardware, workload_server_net_card)
 
         # Always eliminate assignment in DB even if the VLAN can't be erased
