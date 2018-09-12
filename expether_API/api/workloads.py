@@ -1,8 +1,9 @@
 from services.elasticsearch.elasticsearch import ElasticSearchIndex
 from services.mysql.mysqlDB import MySQL
 from flask_injector import inject
-from config.MySQL_config.MySQL_config import workload_mapping
-from config.MySQL_config.MySQL_config import requirement_mapping
+from config.MySQL_config.MySQL_config import workload_keys
+from config.MySQL_config.MySQL_config import hardware_requirements_keys
+from config.MySQL_config.MySQL_config import capacity_requirements_keys
 from utilities.messages import messenger
 from copy import deepcopy
 from collections import Iterable
@@ -12,34 +13,33 @@ from flask import (
 )
 
 __table_workloads = "workloads"
-__table_requirements = "requirements"
-__workload_keys = list(workload_mapping.keys())
-__requirement_keys = list(requirement_mapping.keys())
+__table_hardware_requirements = "hardware_requirements"
+__table_capacity_requirements = "capacity_requirements"
 
 
 def get_workload_requirements(DB, id):
     statement = (
         "SELECT * FROM %s "
         "WHERE workload_id = %s") % (
-            __table_requirements,
+            __table_hardware_requirements,
             id)
     result = DB.select_query(statement)
     return result
 
 
 def process_workload(DB, workload):
-    requirement_mapping = deepcopy(__requirement_keys)
-    requirement_mapping.remove("workload_id")
+    hardware_requirement_key_simplified = deepcopy(hardware_requirements_keys)
+    hardware_requirement_key_simplified.remove("workload_id")
     res_workload = {}
-    for x in range(0, len(__workload_keys)):
-        res_workload[__workload_keys[x]] = workload[x]
+    for x in range(0, len(workload_keys)):
+        res_workload[workload_keys[x]] = workload[x]
 
     requirements = get_workload_requirements(DB, workload[0])
     res_workload["requirements"] = []
     for requirement in requirements:
         processed_req = {}
-        for x in range(0, len(requirement_mapping)):
-            processed_req[requirement_mapping[x]] = requirement[x+1]
+        for x in range(0, len(hardware_requirement_key_simplified)):
+            processed_req[hardware_requirement_key_simplified[x]] = requirement[x+1]
         res_workload["requirements"].append(processed_req)
     return res_workload
 
@@ -74,8 +74,8 @@ def get_workload(id, DB: MySQL):
 
 @inject
 def create_workload(workload, DB: MySQL):
-    mapping = deepcopy(__workload_keys)
-    mapping_requirement = deepcopy(__requirement_keys)
+    mapping = deepcopy(workload_keys)
+    mapping_requirement = deepcopy(hardware_requirements_keys)
     mapping.remove("id")
     mapping_requirement.remove("workload_id")
     if len(workload.keys()) - 1 != len(mapping):
@@ -111,8 +111,8 @@ def create_workload(workload, DB: MySQL):
                 values.append(None)
 
         status, message = DB.insert_query(
-            __table_requirements,
-            __requirement_keys,
+            __table_hardware_requirements,
+            hardware_requirements_keys,
             values)
         if not status:
             return messenger.message404(message)
@@ -123,7 +123,7 @@ def create_workload(workload, DB: MySQL):
 @inject
 def erase_workload(id, DB: MySQL):
     status, message = DB.delete_query_simple(
-        __table_requirements,
+        __table_hardware_requirements,
         "workload_id",
         id)
 

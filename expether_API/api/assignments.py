@@ -2,7 +2,7 @@ from random import choice as ranchoice
 from services.mysql.mysqlDB import MySQL
 from services.eem.eem import EEM
 from flask_injector import inject
-from config.MySQL_config.MySQL_config import assignment_mapping as mapping
+from config.MySQL_config.MySQL_config import assignment_keys
 from api.cards import get_card
 from utilities.messages import messenger
 from collections import Iterable
@@ -13,7 +13,6 @@ from flask import (
 
 __table = "assignments"
 __doc_type = "assignment"
-__table_keys = list(mapping.keys())
 __NON_USED_HARDWARE_GROUP_NUMBER = "4093"
 
 
@@ -133,8 +132,8 @@ def get_all_assignments(DB: MySQL):
     if assignments:
         for assignment in assignments:
             res_assignment = {}
-            for x in range(0, len(__table_keys)):
-                res_assignment[__table_keys[x]] = assignment[x]
+            for x in range(0, len(assignment_keys)):
+                res_assignment[assignment_keys[x]] = assignment[x]
             res_assignments.append(res_assignment)
         return res_assignments
 
@@ -145,12 +144,12 @@ def get_all_assignments(DB: MySQL):
 @inject
 def create_assignment(workload, DB: MySQL, EEM: EEM):
     workload_id = next(iter(workload.values()))
-    statement = ("SELECT * FROM requirements ")
+    statement = ("SELECT * FROM requirements_hardware ")
     statement += ("WHERE workload_id = %s") % workload_id
-    workload_requirements = DB.select_query(statement)
-    if not workload_requirements:
+    workload_requirements_hardware = DB.select_query(statement)
+    if not workload_requirements_hardware:
         message = "Workload does not exist or "
-        message += "does not have any requirements"
+        message += "does not have any hardware requirements"
         return messenger.message404(message)
 
     # Retrieve server EEM net card and GID
@@ -166,12 +165,12 @@ def create_assignment(workload, DB: MySQL, EEM: EEM):
         for box in assigned_hardware:
             box = next(iter(box))
             box_hardware_type = get_card(box, DB, EEM)["hardware"]
-            for requirement in workload_requirements:
+            for requirement in workload_requirements_hardware:
                 if box_hardware_type == requirement[1]:
                     values = [box, workload_server_net_card, workload_id]
                     status, message = DB.insert_query(
                         __table,
-                        __table_keys,
+                        assignment_keys,
                         values)
                     if status:
                         message_assignation += "Card %s of type %s " % (
@@ -188,7 +187,7 @@ def create_assignment(workload, DB: MySQL, EEM: EEM):
 
     else:
         boxes = []
-        for requirement in workload_requirements:
+        for requirement in workload_requirements_hardware:
             available_hardware = get_available_hardware(requirement[1], DB, EEM)
             if not available_hardware:
                 return messenger.message404(
@@ -201,7 +200,7 @@ def create_assignment(workload, DB: MySQL, EEM: EEM):
             values = [box, workload_server_net_card, workload_id]
             status, message = DB.insert_query(
                 __table,
-                __table_keys,
+                assignment_keys,
                 values)
 
             if not status:
@@ -265,7 +264,7 @@ def erase_assignment(workload, DB: MySQL, EEM: EEM):
         # Always eliminate assignment in DB even if the VLAN can't be erased
         status, message = DB.delete_query(
                 __table,
-                __table_keys,
+                assignment_keys,
                 values)
         if not status:
             return messenger.general_error(message)

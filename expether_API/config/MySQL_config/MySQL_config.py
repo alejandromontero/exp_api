@@ -1,49 +1,71 @@
-workload_mapping = {
-        "id": "int",
-        "name": "varchar(255)",
-        "user": "varchar(255)",
-        "description": "varchar(255)",
-        "assigned_to": "varchar(255)"
-        }
+workload_keys = [
+        "id",
+        "name",
+        "user",
+        "description",
+        "assigned_to"
+        ]
 
-workload_mapping_extended = {
-        "id": "int",
-        "name": "varchar(255)",
-        "user": "varchar(255)",
-        "description": "varchar(255)",
-        "assigned_to": "varchar(255)",
-        "requirements": "List"
-        }
+workload_keys_extended = [
+        "id",
+        "name",
+        "user",
+        "description",
+        "assigned_to",
+        "requirements"
+        ]
 
-requirement_mapping = {
-        "workload_id": "int",
-        "hardware_type": "varchar(255)",
-        "model": "varchar(255)",
-        "capacity": "int"
-        }
+hardware_requirements_keys = [
+        "workload_id",
+        "hardware_type",
+        "model"
+        ]
 
-hardware_card_mapping = {
-        "id": "varchar(255)",
-        "hardware": "varchar(255)",
-        "model": "varchar(255)",
-        "pcie_vendor_id": "varchar(255)",
-        "pcie_device_id": "varchar(255)"
-        }
+capacity_requirements_keys = [
+        "workload_id",
+        "requirement_name",
+        "unit",
+        "value"
+        ]
 
-net_card_mapping = {
-        "id": "varchar(255)",
-        "gid": "int",
-        "assigned_to": "varchar(255)"
-        }
+hardware_card_keys = [
+        "id",
+        "hardware",
+        "model",
+        "pcie_vendor_id",
+        "pcie_device_id"
+        ]
 
-servers_mapping = {
-        "id": "varchar(255)",
-        "name": "varchar(255)",
-        "number": "int"
-        }
+hardware_capacity = [
+        "hardware_id",
+        "capacity_name",
+        "unit",
+        "value"
+        ]
 
-assignment_mapping = {
-        "hardware_card": "varchar(255)",
-        "server_card": "varchar(255)",
-        "workload": "int"
-        }
+net_card_keys = [
+        "id",
+        "gid",
+        "assigned_to"
+        ] 
+
+servers_keys = [
+        "id",
+        "name",
+        "number"
+        ]
+
+assignment_keys = [
+        "hardware_card",
+        "server_card",
+        "workload"
+        ]
+
+assigned_capacity = [
+        "hardware_card",
+        "server_card",
+        "workload",
+        "capacity_name",
+        "unit",
+        "value"
+        ]

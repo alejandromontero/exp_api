@@ -8,8 +8,6 @@ from api.assignments import get_all_assignments
 from api.workloads import get_all_workloads
 from api.cards import get_all_hardware_cards
 from api.cards import get_all_network_cards
-from config.MySQL_config.MySQL_config import hardware_card_mapping
-from config.MySQL_config.MySQL_config import net_card_mapping
 from utilities.html import html
 from utilities.eemParser import eemParser
 from collections import Iterable
@@ -19,28 +17,22 @@ from flask import (
     render_template
 )
 from config.MySQL_config.MySQL_config import (
-    workload_mapping,
-    workload_mapping_extended,
-    hardware_card_mapping,
-    net_card_mapping,
-    servers_mapping,
-    assignment_mapping
+    workload_keys,
+    workload_keys_extended,
+    hardware_card_keys,
+    net_card_keys,
+    servers_keys,
+    assignment_keys
 )
 
 
 __NON_USED_HARDWARE_GROUP_NUMBER = "4093"
-__work_mapping = list(workload_mapping.keys())
-__work_mapping_extended = list(workload_mapping_extended.keys())
-__hardw_mapping = list(hardware_card_mapping.keys())
-__net_mapping = list(net_card_mapping.keys())
-__serv_mapping = list(servers_mapping.keys())
-__assig_mapping = list(assignment_mapping.keys())
 __state_html_filename = "global_state.html"
 __html_dumb_folder = os.path.join(
     os.path.dirname(__file__),
     "..", "www"
     )
-__assig_mapping_extended = [
+assignment_keys_extended = [
         "hardware_card",
         "server_card",
         "workload",
@@ -161,7 +153,7 @@ def update_assigned_cards(cards, DB):
             values = [id, "UNKNOWN", "UNKNOWN", "UNKNOWN", server]
             status, message = DB.insert_query(
                 "workloads",
-                __work_mapping,
+                workload_keys,
                 values)
             if not status:
                 return (status, message)
@@ -170,7 +162,7 @@ def update_assigned_cards(cards, DB):
             values = [card["id"], net_card, id]
             status, message = DB.insert_query(
                 "assignments",
-                __assig_mapping,
+                assignment_keys,
                 values)
 
             if not status:
@@ -181,9 +173,8 @@ def update_assigned_cards(cards, DB):
 
 # TODO: Is there a way to discover the server by using the GID???
 def update_net_card(card, DB):
-    mapping = list(net_card_mapping.keys())
     values = []
-    for field in mapping:
+    for field in net_card_keys:
         if field in card:
             values.append(card[field])
         else:
@@ -194,14 +185,13 @@ def update_net_card(card, DB):
 
     return DB.insert_query(
         "net_card",
-        mapping,
+        net_card_keys,
         values)
 
 
 def update_hardware_card(card, DB):
-    mapping = list(hardware_card_mapping.keys())
     values = []
-    for field in mapping:
+    for field in hardware_card_keys:
         if field in card and field != "model":
             values.append(card[field])
         else:
@@ -209,7 +199,7 @@ def update_hardware_card(card, DB):
 
     return DB.insert_query(
         "hardware_cards",
-        mapping,
+        hardware_card_keys,
         values)
 
 
@@ -294,7 +284,7 @@ def create_state_html(DB, EEM):
         docs.append(
             {
                 "name": "assignments",
-                "mapping": __assig_mapping_extended,
+                "mapping": assignment_keys_extended,
                 "values": assignments_extended
             }
         )
@@ -303,7 +293,7 @@ def create_state_html(DB, EEM):
         docs.append(
             {
                 "name": "workloads",
-                "mapping": __work_mapping_extended,
+                "mapping": workload_keys_extended,
                 "values": workloads
             }
         )
@@ -312,7 +302,7 @@ def create_state_html(DB, EEM):
         docs.append(
             {
                 "name": "hardware cards",
-                "mapping": __hardw_mapping,
+                "mapping": hardware_card_keys,
                 "values": hardw_cards
             }
         )
@@ -321,7 +311,7 @@ def create_state_html(DB, EEM):
         docs.append(
             {
                 "name": "network cards",
-                "mapping": __net_mapping,
+                "mapping": net_card_keys,
                 "values": net_cards
             }
         )
