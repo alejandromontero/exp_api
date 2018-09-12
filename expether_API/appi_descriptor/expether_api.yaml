@@ -334,18 +334,6 @@ paths:
                     description: 'HTML generated'
 
 
-        post:
-            operationId: api.global.update_state
-            tags: [
-                "EEM global state"
-                ]
-            description: Update the global state of the EEM DB
-            responses:
-                '200':
-                    description: 'Success'
-                '404':
-                    description: 'Failed update'
-
 definitions:
     Assignament:
         type: object

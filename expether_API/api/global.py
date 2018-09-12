@@ -325,22 +325,11 @@ def create_state_html(DB, EEM):
                 "values": net_cards
             }
         )
-    html_file = html.generate_table_jinja(docs)
-    dumb_html_file(html_file)
+    return html.generate_table_jinja(docs)
 
 
 @inject
 def get_state(DB: MySQL, EEM: EEM):
-    html = read_html_file()
-    if html:
-        return make_response(html)
-
-    else:
-        return messenger.message404("No state found, try executing POST fist")
-
-
-@inject
-def update_state(DB: MySQL, EEM: EEM):
     n_cards = 0
     cards = []
     for line in EEM.get_all_logical_assigned().splitlines():
@@ -360,5 +349,5 @@ def update_state(DB: MySQL, EEM: EEM):
     if not status:
         return messenger.general_error(message)
 
-    create_state_html(DB, EEM)
-    return messenger.message200('OK')
+    return make_response(create_state_html(DB, EEM))
+
