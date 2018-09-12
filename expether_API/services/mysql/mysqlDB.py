@@ -54,7 +54,7 @@ class MySQL(object):
 
     def insert_query(self, table, mapping, data):
         if len(mapping) != len(data):
-            message = "Value length does not correspond"
+            message = "Value length does not correspond "
             message += "To the size of the table mapping"
             return (False, message)
 

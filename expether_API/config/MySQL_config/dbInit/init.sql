@@ -11,10 +11,20 @@ CREATE TABLE IF NOT EXISTS servers (
 CREATE TABLE IF NOT EXISTS workloads (
 	id int NOT NULL AUTO_INCREMENT,
 	name varchar(255) NOT NULL,
-	requirement varchar(255),
+	user varchar(255) NOT NULL,
+	description varchar(255),
 	assigned_to varchar(255),
 	PRIMARY KEY (id),
 	FOREIGN KEY (assigned_to) REFERENCES servers(name)
+	);
+
+CREATE TABLE IF NOT EXISTS requirements (
+	workload_id int NOT NULL,
+	hardware_type varchar(255) NOT NULL,
+	model varchar(255),
+	capacity int,
+	PRIMARY KEY (workload_id,hardware_type),
+	FOREIGN KEY (workload_id) REFERENCES workloads(id)
 	);
 
 CREATE TABLE IF NOT EXISTS net_card (

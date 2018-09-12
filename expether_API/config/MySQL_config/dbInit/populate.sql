@@ -24,7 +24,3 @@ VALUES
 ("0x743a65043e2a", "NVME", "Optane 2701", "8086", "2701"),
 ("0x8cdf9dd32010", "FPGA", "PAC10", "8086", "09c4"),
 ("0x8cdf9dd32012", "GPU", "Tesla K40", "10de", "1024");
-
-INSERT INTO assignaments
-VALUES
-("0x8cdf9dd32012", "0x743a6504489a", 1);

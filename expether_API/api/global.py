@@ -20,6 +20,7 @@ from flask import (
 )
 from config.MySQL_config.MySQL_config import (
     workload_mapping,
+    workload_mapping_extended,
     hardware_card_mapping,
     net_card_mapping,
     servers_mapping,
@@ -29,6 +30,7 @@ from config.MySQL_config.MySQL_config import (
 
 __NON_USED_HARDWARE_GROUP_NUMBER = "4093"
 __work_mapping = list(workload_mapping.keys())
+__work_mapping_extended = list(workload_mapping_extended.keys())
 __hardw_mapping = list(hardware_card_mapping.keys())
 __net_mapping = list(net_card_mapping.keys())
 __serv_mapping = list(servers_mapping.keys())
@@ -38,6 +40,16 @@ __html_dumb_folder = os.path.join(
     os.path.dirname(__file__),
     "..", "www"
     )
+__assig_mapping_extended = [
+        "hardware_card",
+        "server_card",
+        "workload",
+        "hardware_type",
+        "hardware_model",
+        "server_name",
+        "user",
+        "description"]
+
 
 
 # Return whether an assignament was performed by the API
@@ -63,18 +75,6 @@ def is_ghost_assignament(hard_card, net_card, DB):
         return False
 
 
-def get_network_card(gid, DB):
-    statement = (
-        "SELECT id "
-        "FROM net_card "
-        'WHERE gid = "%s"'
-    ) % (gid)
-    net = DB.select_query(statement)
-    while (isinstance(net, Iterable) and not isinstance(net, str)):
-        net = next(iter(net))
-    return net
-
-
 def get_next_id(DB):
     statement = (
         "SELECT MIN(id) "
@@ -92,16 +92,16 @@ def get_next_id(DB):
         return id - 1
 
 
-def get_workload_server(gid, DB):
+def get_from_DB_simple(attribute, table, condition, condition_value, DB):
     statement = (
-        "SELECT assigned_to "
-        "FROM net_card "
-        'WHERE gid = "%s"'
-    ) % (gid)
-    server = DB.select_query(statement)
-    while (isinstance(server, Iterable) and not isinstance(server, str)):
-        server = next(iter(server))
-    return server  # For some reason the above loop never converges
+        "SELECT %s "
+        "FROM %s "
+        'WHERE %s = "%s"'
+    ) % (attribute, table, condition, condition_value)
+    value = DB.select_query(statement)
+    while (isinstance(value, Iterable) and not isinstance(value, str)):
+        value = next(iter(value))
+    return value
 
 
 def dumb_html_file(html):
@@ -111,6 +111,7 @@ def dumb_html_file(html):
     )
     with open(dumb_file, 'w') as file:
         file.write(html)
+
 
 def read_html_file():
     dumb_file = os.path.join(
@@ -122,6 +123,7 @@ def read_html_file():
             return file.read()
     else:
         return False
+
 
 def update_assigned_cards(cards, DB):
     assigned_cards = []
@@ -141,12 +143,23 @@ def update_assigned_cards(cards, DB):
     # Get API assignaments that have a hardware card assigned to a
     # Net card with the corresponding GID
     for card in assigned_cards:
-        net_card = get_network_card(card["group_id"], DB)
+        net_card = get_from_DB_simple(
+            "id",
+            "net_card",
+            "gid",
+            card["group_id"],
+            DB)
         if is_ghost_assignament(card["id"], net_card, DB):
             # First, generate a new workload with unknown data
             id = get_next_id(DB)
-            server = get_workload_server(card["group_id"], DB)
-            values = [id, "UNKNOWN", "UNKNOWN", server]
+            server = get_from_DB_simple(
+                "assigned_to",
+                "net_card",
+                "gid",
+                card["group_id"],
+                DB)
+            return server
+            values = [id, "UNKNOWN", "UNKNOWN", "UNKNOWN", server]
             status, message = DB.insert_query(
                 "workloads",
                 __work_mapping,
@@ -238,11 +251,52 @@ def create_state_html(DB, EEM):
     docs = []
     assignaments = get_all_assignaments(DB)
     if "status" not in assignaments:
+        assignaments_extended = []
+        for assignament in assignaments:
+            assignament_extended = assignament
+
+            assignament_extended["hardware_type"] = get_from_DB_simple(
+                "hardware",
+                "hardware_cards",
+                "id",
+                assignament["hardware_card"],
+                DB)
+
+            assignament_extended["hardware_model"] = get_from_DB_simple(
+                "model",
+                "hardware_cards",
+                "id",
+                assignament["hardware_card"],
+                DB)
+
+            assignament_extended["server_name"] = get_from_DB_simple(
+                "assigned_to",
+                "net_card",
+                "id",
+                assignament["server_card"],
+                DB)
+
+            assignament_extended["user"] = get_from_DB_simple(
+                "user",
+                "workloads",
+                "id",
+                assignament["workload"],
+                DB)
+
+            assignament_extended["description"] = get_from_DB_simple(
+                "description",
+                "workloads",
+                "id",
+                assignament["workload"],
+                DB)
+
+            assignaments_extended.append(assignament_extended)
+
         docs.append(
             {
                 "name": "assignaments",
-                "mapping": __assig_mapping,
-                "values": assignaments
+                "mapping": __assig_mapping_extended,
+                "values": assignaments_extended
             }
         )
     workloads = get_all_workloads(DB)
@@ -250,7 +304,7 @@ def create_state_html(DB, EEM):
         docs.append(
             {
                 "name": "workloads",
-                "mapping": __work_mapping,
+                "mapping": __work_mapping_extended,
                 "values": workloads
             }
         )
@@ -306,5 +360,6 @@ def update_state(DB: MySQL, EEM: EEM):
     status, message = update_assigned_cards(cards, DB)
     if not status:
         return messenger.general_error(message)
+
     create_state_html(DB, EEM)
     return messenger.message200('OK')

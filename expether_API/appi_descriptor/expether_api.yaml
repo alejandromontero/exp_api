@@ -75,27 +75,6 @@ paths:
                 '404':
                     description: 'Assignament not found'
 
-
-    /assignament/{id}:
-        get:
-            operationId: api.assignaments.get_assignament
-            tags: [
-                "assignaments"
-                ]
-            description: Retrieve assignament information
-            parameters:
-                - in: path
-                  name: id
-                  required: true
-                  type: number
-                  description: ID of the assignament to query
-            responses:
-                '200':
-                    description: 'Assignament found'
-                '400':
-                    description: 'Assignament not found'
-            
-                    
     /workload:
         get:
             operationId: api.workloads.get_all_workloads
@@ -381,7 +360,9 @@ definitions:
         properties:
             name:
                 type: string
-            requirement: 
+            user:
+                type: string
+            description:
                 type: string
             assigned_to:
                 type: string

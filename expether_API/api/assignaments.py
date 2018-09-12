@@ -38,8 +38,10 @@ def is_feasible_to_unasign_hardware(assigned_hardware, server_card, DB):
     ) % (assigned_hardware, server_card)
 
     result = DB.select_query(statement)
-    if result and isinstance(result[0], Iterable):
-        if next(iter(result[0])) == 1:  # Condition 1
+    if result and isinstance(result, Iterable):
+        while isinstance(result, Iterable):
+            result = next(iter(result))
+        if result == 1:  # Condition 1
             return True
     return False
 
@@ -83,18 +85,14 @@ def get_assigned_hardware_cards(workload_id, DB):
 
 
 # Return a list of hardware boxes that are not assigned to any server
-def get_available_hardware(workload_id, DB, EEM):
+def get_available_hardware(hardware_type, DB, EEM):
     # Check whether there is an available hardware card of the
     # type required by the workload
     statement = (
         "SELECT id "
         "FROM hardware_cards "
-        "WHERE hardware = ( "
-            "SELECT requirement "
-            "FROM workloads "
-            "WHERE id = %s "
-            ") "
-    ) % workload_id
+        'WHERE hardware = "%s"'
+    ) % hardware_type
     non_assigned_hardware = []
     available_hardware = DB.select_query(statement)
     if available_hardware:
@@ -116,8 +114,8 @@ def get_assignament_hardware(workload_id, DB):
         "WHERE workload = %s "
         ) % workload_id
     result = DB.select_query(statement)
-    if result and isinstance(result[0], Iterable):
-        return next(iter(result[0]))
+    if result:
+        return result
     return False
 
 
@@ -145,35 +143,16 @@ def get_all_assignaments(DB: MySQL):
 
 
 @inject
-def get_assignament(id, DB: MySQL):
-    statement = ("SELECT * FROM %s ") % __table
-    statement += ("WHERE ID = ") + id
-    assignaments = DB.select_query(statement)
-    assignament = {}
-    if assignaments:
-        for x in range(0, len(__table_keys)):
-            assignament[__table_keys[x]] = assignaments[0][x]
-        return assignament
-
-    else:
-        return messenger.message404(
-                "The requested ID does not exist on the server")
-
-
-@inject
 def create_assignament(workload, DB: MySQL, EEM: EEM):
     workload_id = next(iter(workload.values()))
-    statement = ("SELECT requirement FROM workloads ")
-    statement += ("WHERE id = %s") % workload_id
-    workload_requirement = DB.select_query(statement)
-    if workload_requirement:
-        workload_requirement = next(iter(workload_requirement))
-        if isinstance(workload_requirement, Iterable):
-            workload_requirement = next(iter(workload_requirement))
-    else:
+    statement = ("SELECT * FROM requirements ")
+    statement += ("WHERE workload_id = %s") % workload_id
+    workload_requirements = DB.select_query(statement)
+    if not workload_requirements:
         message = "Workload does not exist or "
         message += "does not have any requirements"
         return messenger.message404(message)
+
     # Retrieve server EEM net card and GID
     workload_server_net_card, gid = get_server_card(workload_id, DB)
     if not workload_server_net_card:
@@ -183,45 +162,57 @@ def create_assignament(workload, DB: MySQL, EEM: EEM):
     # Retrieve the hardware cards already assigned to the server card
     assigned_hardware = get_assigned_hardware_cards(workload_id, DB)
     if assigned_hardware:
-        for box in next(iter(assigned_hardware)):
-            if get_card(box, DB, EEM)["hardware"] == workload_requirement:
-                values = [box, workload_server_net_card, workload_id]
-                status, message = DB.insert_query(
+        message_assignation = ""
+        for box in assigned_hardware:
+            box = next(iter(box))
+            box_hardware_type = get_card(box, DB, EEM)["hardware"]
+            for requirement in workload_requirements:
+                if box_hardware_type == requirement[1]:
+                    values = [box, workload_server_net_card, workload_id]
+                    status, message = DB.insert_query(
                         __table,
                         __table_keys,
                         values)
-                if status:
-                    message = "Card %s of type %s " % (
+                    if status:
+                        message_assignation += "Card %s of type %s " % (
                             box,
-                            workload_requirement)
-                    message += "is already assigned to the server; "
-                    message += "new assignament created"
-                else:
-                    return messenger.general_error(message)
+                            requirement[1])
+                        message_assignation += "is already assigned to the server; "
+                        message_assignation += "new assignament created "
+                    else:
+                        message = "The assignment already exists, exiting..."
+                        return messenger.message409(message)
 
-    # Retrieve a list of available hardware of the requested type
-    available_hardware = get_available_hardware(workload_id, DB, EEM)
-    if available_hardware:
-        box = select_hardware(available_hardware)
-        values = [box, workload_server_net_card, workload_id]
-        status, message = DB.insert_query(
+        return messenger.message200(message_assignation)
+
+
+    else:
+        boxes = []
+        for requirement in workload_requirements:
+            available_hardware = get_available_hardware(requirement[1], DB, EEM)
+            if not available_hardware:
+                return messenger.message404(
+                    "There is not any availble hardware of the type: %s" % (
+                        requirement[1]))
+            boxes.append(select_hardware(available_hardware))
+
+        vlan_message = ""
+        for box in boxes:
+            values = [box, workload_server_net_card, workload_id]
+            status, message = DB.insert_query(
                 __table,
                 __table_keys,
                 values)
-        status = True
-        if status:
+
+            if not status:
+                return messenger.general_error(message)
+
             EEM.assign_hardware_to_server(box, gid)
-            return messenger.message200(
-                "New VLAN created between %s and %s" % (
-                    box,
-                    workload_server_net_card),
-            )
-        else:
-            return messenger.general_error(message)
-    else:
-        return messenger.message404(
-            "There is not any availble hardware of the type: %s" % (
-                workload_requirement))
+            vlan_message += "New VLAN created between %s and %s " % (
+                box,
+                workload_server_net_card)
+
+        return messenger.message200(vlan_message)
 
 
 @inject
@@ -240,34 +231,43 @@ def erase_assignament(workload, DB: MySQL, EEM: EEM):
             % workload_server_net_card)
         return messenger.message404(message)
     downs_port = downs_port["downstream_port_id"]
-    assigned_hardware = get_assignament_hardware(workload_id, DB)
-    if not assigned_hardware:
+    assigned_cards = get_assignament_hardware(workload_id, DB)
+    if not assigned_cards:
         message = (
             "Cannot erase assignment as the workload does not "
             "have any hardware card assigned"
         )
         return messenger.message404(message)
 
-    values = [assigned_hardware, workload_server_net_card, workload_id]
+    erase_message = ""
+    for assigned_hardware in assigned_cards:
+        assigned_hardware = next(iter(assigned_hardware))
+        values = [assigned_hardware, workload_server_net_card, workload_id]
 
-    if is_feasible_to_unasign_hardware(
-            assigned_hardware,
-            workload_server_net_card,
-            DB):
-        EEM.disconect_hardware_from_server(assigned_hardware)
-        status, message = DB.delete_query(
-            __table,
-            __table_keys,
-            values)
-
-        return messenger.message200(
-            "VLAN erased between %s and %s" % (
+        if is_feasible_to_unasign_hardware(
                 assigned_hardware,
-                workload_server_net_card),
-        )
+                workload_server_net_card,
+                DB):
 
-    else:
-        return messenger.message200(
-            "VLAN between %s and %s could't be erased as "
-            "there are other assignaments in progress"
-        ) % (assigned_hardware, workload_server_net_card)
+            EEM.disconect_hardware_from_server(assigned_hardware)
+
+            erase_message += "VLAN erased between %s and %s" % (
+                assigned_hardware,
+                workload_server_net_card)
+
+        else:
+            erase_message += (
+                "VLAN between %s and %s could't be erased as "
+                "there are other assignaments in progress, "
+                "DB assignament erased"
+            ) % (assigned_hardware, workload_server_net_card)
+
+        # Always eliminate assignment in DB even if the VLAN can't be erased
+        status, message = DB.delete_query(
+                __table,
+                __table_keys,
+                values)
+        if not status:
+            return messenger.general_error(message)
+
+    return messenger.message200(erase_message)
