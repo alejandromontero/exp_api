@@ -6,14 +6,6 @@ workload_keys = [
         "assigned_to"
         ]
 
-workload_keys_extended = [
-        "id",
-        "name",
-        "user",
-        "description",
-        "assigned_to",
-        "requirements"
-        ]
 
 hardware_requirements_keys = [
         "workload_id",
@@ -36,7 +28,7 @@ hardware_card_keys = [
         "pcie_device_id"
         ]
 
-hardware_capacity = [
+hardware_capacity_keys = [
         "hardware_id",
         "capacity_name",
         "unit",

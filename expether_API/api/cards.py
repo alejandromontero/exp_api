@@ -5,8 +5,10 @@ from services.eem.eem import EEM
 from utilities.eemParser import eemParser
 from flask_injector import inject
 from config.MySQL_config.MySQL_config import hardware_card_keys
+from config.MySQL_config.MySQL_config import hardware_capacity_keys
 from config.MySQL_config.MySQL_config import net_card_keys
 from utilities.messages import messenger
+from copy import deepcopy
 from collections import Iterable
 from flask import (
         make_response,
@@ -14,12 +16,15 @@ from flask import (
 )
 
 __table_hardware = "hardware_cards"
+__table_hardware_capacity = "hardware_capacity"
 __table_net = "net_card"
+
+hardware_card_extended_keys = deepcopy(hardware_card_keys)
+hardware_card_extended_keys.append("capacity")
 
 
 def insert_card(card, table, mapping, DB, EEM):
-    #return (True, len(mapping))
-    if len(card.keys()) != len(mapping):
+    if len(card.keys()) - 1 != len(mapping):
         message = "Inserted card data is incorrect"
         return (False, message)
 
@@ -30,6 +35,9 @@ def insert_card(card, table, mapping, DB, EEM):
 
     values = []
     for x in range(0, len(mapping)):
+        if mapping[x] not in card:
+            message = "%s not introduced in request" % (mapping[x])
+            return (False, message)
         values.append(card[mapping[x]])
 
     return DB.insert_query(
@@ -38,15 +46,39 @@ def insert_card(card, table, mapping, DB, EEM):
         values)
 
 
+def insert_card_capacity(card, table, mapping, DB, EEM):
+    if "capacity" not in card:
+        message = "Inserted card data is incorrect, capacity values missing"
+        return (False, message)
+    for capacity in card["capacity"]:
+        capacity["hardware_id"] = card["id"]
+        values = []
+        for x in range(0, len(mapping)):
+            if mapping[x] not in capacity:
+                message = "%s not introduced in the request" % (mapping[x])
+                return (False, message)
+            values.append(capacity[mapping[x]])
+
+        status, message = DB.insert_query(
+            table,
+            mapping,
+            values)
+
+        if not status:
+            return (False, message)
+
+    return (True, message)
+
+
 def modify_card(card, table, mapping, DB, EEM):
-    if len(card.keys()) != len(mapping):
+    if len(card.keys()) - 1 != len(mapping):
         message = "Inserted card data is incorrect"
         return (False, message)
     out = get_card(card["id"], DB, EEM)
     if out["status"] == "404":
         message = "The card to modify has no entry in the DB"
         return (False, message)
-
+    mapping = deepcopy(mapping)
     mapping.remove("id")
     values = []
     for x in range(0, len(mapping)):
@@ -60,6 +92,58 @@ def modify_card(card, table, mapping, DB, EEM):
         card["id"])
 
 
+def modify_capacities(card, table, mapping, DB, EEM):
+    if "capacity" not in card:
+        return (True, "OK")
+    statement = (
+        "SELECT * FROM %s "
+        'WHERE hardware_id = "%s"'
+        ) % (table, card["id"])
+
+    current_capacities = DB.select_query(statement)
+
+    capacities = card["capacity"]
+    for capacity in capacities:
+        found = False
+        capacity["hardware_id"] = card["id"]
+        for current_capacity in current_capacities:
+            if capacity["hardware_id"] in current_capacity and capacity["capacity_name"] in current_capacity:
+                # We need to change the capacity values,
+                # Table primary key is complex, we need a bit of work
+                found = True
+                values = []
+                for x in range(0, len(mapping)):
+                    values.append(capacity[mapping[x]])
+
+                status, message = DB.modify_query_complex(
+                    table,
+                    mapping,
+                    values,
+                    ["hardware_id", "capacity_name"],
+                    [capacity["hardware_id"], capacity["capacity_name"]]
+                )
+
+                if not status:
+                    return (status, message)
+        if not found:
+            # A new capacity has been introduced, we require a new insert
+            values = []
+            for x in range(0, len(mapping)):
+                if mapping[x] not in capacity:
+                    message = "%s not introduced in the request" % (mapping[x])
+                    return (False, message)
+                values.append(capacity[mapping[x]])
+            status, message = DB.insert_query(
+                table,
+                mapping,
+                values)
+
+            if not status:
+                return (False, message)
+
+    return (True, "OK")
+
+
 def get_DB_info_cards(mapping, card_type, DB, EEM):
     out = []
     cards = get_all_cards(DB, EEM)
@@ -68,7 +152,8 @@ def get_DB_info_cards(mapping, card_type, DB, EEM):
         if card["status"] == card_type:
             card_out = {}
             for param in range(0, len(mapping)):
-                card_out[mapping[param]] = card[mapping[param]]
+                if mapping[param] in card:
+                    card_out[mapping[param]] = card[mapping[param]]
             out.append(card_out)
     return out
 
@@ -96,12 +181,19 @@ def get_card(id, DB: MySQL, EEM: EEM):
     if out["status"] == "eeio":
         table = __table_hardware
         mapping = hardware_card_keys
+        statement = (
+            "SELECT * FROM %s "
+            'WHERE hardware_id = "%s"') % (
+                __table_hardware_capacity,
+                id)
+        capacities = DB.select_query(statement)
     else:
         table = __table_net
         mapping = net_card_keys
+        capacities = None
     statement = (
         "SELECT * FROM %s "
-        'WHERE id = \"%s\"') % (table, id)
+        'WHERE id = "%s"') % (table, id)
     card = DB.select_query(statement)
     if card:
         if(isinstance(card, Iterable) and not isinstance(card, str)):
@@ -112,17 +204,31 @@ def get_card(id, DB: MySQL, EEM: EEM):
         for param in range(0, len(mapping)):
             if mapping[param] != "id":
                 out[mapping[param]] = "UNKNOWN"
+    if capacities:
+        insert_capactities = []
+        for capacity in capacities:
+            insert_capacity = {}
+            for param in range(0, len(hardware_capacity_keys)):
+                if hardware_capacity_keys[param] != "hardware_id":
+                    insert_capacity[hardware_capacity_keys[param]] \
+                        = capacity[param]
+            insert_capactities.append(insert_capacity)
+        out["capacity"] = insert_capactities
+    else:
+        out["capacity"] = "UNKNOWN"
+
     return out
 
 
 @inject
 def get_all_hardware_cards(DB: MySQL, EEM: EEM):
-    return get_DB_info_cards(
-        hardware_card_keys,
+    cards = get_DB_info_cards(
+        hardware_card_extended_keys,
         "eeio",
         DB,
         EEM
     )
+    return cards
 
 
 @inject
@@ -140,7 +246,14 @@ def create_hardware_tag(card, DB: MySQL, EEM: EEM):
     status, message = insert_card(
         card,
         __table_hardware,
-        hardware_card_keys,
+        hardware_card_extended_keys,
+        DB,
+        EEM)
+
+    status, message = insert_card_capacity(
+        card,
+        __table_hardware_capacity,
+        hardware_capacity_keys,
         DB,
         EEM)
 
@@ -174,10 +287,17 @@ def modify_hardware_tag(card, DB: MySQL, EEM: EEM):
         DB,
         EEM)
 
+    status, message = modify_capacities(
+        card,
+        __table_hardware_capacity,
+        hardware_capacity_keys,
+        DB,
+        EEM)
+
     if status:
         return messenger.message200(message)
     else:
-        return messenger.message404(message)
+        return messenger.message409(message)
 
 
 @inject
@@ -192,22 +312,31 @@ def modify_net_tag(card, DB: MySQL, EEM: EEM):
     if status:
         return messenger.message200(message)
     else:
-        return messenger.message404(message)
+        return messenger.message409(message)
 
 
 # TODO: Add does not exists card control
 @inject
 def erase_card(id, DB: MySQL, EEM: EEM):
     if get_card(id, DB, EEM)["status"] == "eeio":
-        table = __table_hardware
-    else:
-        table = __table_net
+        status, message = DB.delete_query_simple(
+            __table_hardware_capacity,
+            "hardware_id",
+            id
+        )
 
-    status, message = DB.delete_query_simple(
-        table,
-        "id",
-        id
-    )
+        status, message = DB.delete_query_simple(
+            __table_hardware,
+            "id",
+            id
+        )
+    else:
+        status, message = DB.delete_query_simple(
+            __table_net,
+            "id",
+            id
+        )
+
     if status:
         return messenger.message200(message)
     else:

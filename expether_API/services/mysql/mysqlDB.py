@@ -78,7 +78,6 @@ class MySQL(object):
             values[mapping[-1]] = '%s' % (data[-1])
         else:
             values[mapping[-1]] = None
-
         cnx = self.connection()
         cursor = cnx.cursor()
         try:
@@ -106,6 +105,39 @@ class MySQL(object):
 
         statement += '%s = "%s" ' % (mapping[-1], data[-1])
         statement += 'WHERE %s = "%s"' % (modID, modValue)
+
+        cnx = self.connection()
+        cursor = cnx.cursor()
+
+        try:
+            cursor.execute(statement)
+        except (Error, Warning) as err:
+            return (False, str(err))
+
+        cursor.close()
+        cnx.commit()
+        cursor.close()
+
+        return (True, "OK")
+
+    def modify_query_complex(self, table, mapping, data, modIDs, modValues):
+        if len(mapping) != len(data):
+            message = "Value length does not correspond"
+            message += "To the size of the table mapping"
+            return (False, message)
+
+        statement = (
+                'UPDATE %s '
+                "SET "
+                ) % table
+        for x in range(0, len(mapping) - 1):
+            statement += '%s = "%s", ' % (mapping[x], data[x])
+
+        statement += '%s = "%s" ' % (mapping[-1], data[-1])
+        statement += "WHERE "
+        for x in range(0, len(modIDs) - 1):
+            statement += '%s = "%s" AND ' % (modIDs[x], modValues[x])
+        statement += '%s = "%s"' % (modIDs[-1], modValues[-1])
 
         cnx = self.connection()
         cursor = cnx.cursor()

@@ -9,6 +9,7 @@ from api.workloads import get_all_workloads
 from api.cards import get_all_hardware_cards
 from api.cards import get_all_network_cards
 from utilities.html import html
+from copy import deepcopy
 from utilities.eemParser import eemParser
 from collections import Iterable
 from flask import (
@@ -18,8 +19,8 @@ from flask import (
 )
 from config.MySQL_config.MySQL_config import (
     workload_keys,
-    workload_keys_extended,
     hardware_card_keys,
+    hardware_capacity_keys,
     net_card_keys,
     servers_keys,
     assignment_keys
@@ -42,6 +43,10 @@ assignment_keys_extended = [
         "user",
         "description"]
 
+workload_keys_extended = deepcopy(workload_keys)
+hardware_card_extended_keys = deepcopy(hardware_card_keys)
+workload_keys_extended.append("requirements")
+hardware_card_extended_keys.append("capacity")
 
 
 # Return whether an assignment was performed by the API
@@ -302,7 +307,7 @@ def create_state_html(DB, EEM):
         docs.append(
             {
                 "name": "hardware cards",
-                "mapping": hardware_card_keys,
+                "mapping": hardware_card_extended_keys,
                 "values": hardw_cards
             }
         )

@@ -376,6 +376,20 @@ definitions:
                 type: string
             pcie_device_id:
                 type: string
+            capacity:
+                type: array
+                items:
+                    $ref: '#/definitions/Capacity'
+
+    Capacity:
+        type: object
+        properties:
+            capacity_name:
+                type: string
+            unit:
+                type: string
+            value:
+                type: number
 
     NetTag:
         type: object
