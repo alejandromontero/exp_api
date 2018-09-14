@@ -67,12 +67,12 @@ def insert_card_capacity(card, table, mapping, DB, EEM):
         if not status:
             return (False, message)
 
-    return (True, message)
+    return (True, "OK")
 
 
 def modify_card(card, table, mapping, DB, EEM):
     if len(card.keys()) - 1 != len(mapping):
-        message = "Inserted card data is incorrect"
+        essage = "Inserted card data is incorrect"
         return (False, message)
     out = get_card(card["id"], DB, EEM)
     if out["status"] == "404":
@@ -94,16 +94,19 @@ def modify_card(card, table, mapping, DB, EEM):
 
 def modify_capacities(card, table, mapping, DB, EEM):
     if "capacity" not in card:
-        return (True, "OK")
+        return (True, "No capacities to update")
     statement = (
         "SELECT * FROM %s "
         'WHERE hardware_id = "%s"'
         ) % (table, card["id"])
 
     current_capacities = DB.select_query(statement)
-
     capacities = card["capacity"]
     for capacity in capacities:
+        if "capacity_name" not in capacity:
+            message = "capacity_name not introduced in the request"
+            return (False, message)
+
         found = False
         capacity["hardware_id"] = card["id"]
         for current_capacity in current_capacities:
@@ -113,6 +116,10 @@ def modify_capacities(card, table, mapping, DB, EEM):
                 found = True
                 values = []
                 for x in range(0, len(mapping)):
+                    if mapping[x] not in capacity:
+                        message = "%s not introduced in the request" % (
+                            mapping[x])
+                        return (False, message)
                     values.append(capacity[mapping[x]])
 
                 status, message = DB.modify_query_complex(
@@ -243,10 +250,12 @@ def get_all_network_cards(DB: MySQL, EEM: EEM):
 
 @inject
 def create_hardware_tag(card, DB: MySQL, EEM: EEM):
+    DB.start_transaction()
+
     status, message = insert_card(
         card,
         __table_hardware,
-        hardware_card_extended_keys,
+        hardware_card_keys,
         DB,
         EEM)
 
@@ -257,14 +266,28 @@ def create_hardware_tag(card, DB: MySQL, EEM: EEM):
         DB,
         EEM)
 
+    # First status code checks:
+    # 1: Syntaxis
+    # 2: Completeness
     if status:
-        return messenger.message200(message)
+        status, message = DB.commit_transaction()
+        # Second status checks:
+        # 1: Data integrity
+        if status:
+            return messenger.message200("OK")
+
+        # Implicit rollback
+        else:
+            return messenger.message404(message)
     else:
-        return messenger.message404(message)
+        status, error = DB.rollback(message)
+        return messenger.message404(error)
 
 
 @inject
 def create_net_tag(card, DB: MySQL, EEM: EEM):
+    DB.start_transaction()
+
     status, message = insert_card(
         card,
         __table_net,
@@ -272,14 +295,28 @@ def create_net_tag(card, DB: MySQL, EEM: EEM):
         DB,
         EEM)
 
+    # First status code checks:
+    # 1: Syntaxis
+    # 2: Completeness
     if status:
-        return messenger.message200(message)
+        status, message = DB.commit_transaction()
+        # Second status checks:
+        # 1: Data integrity
+        if status:
+            return messenger.message200("OK")
+
+        # Implicit rollback
+        else:
+            return messenger.message404(message)
     else:
-        return messenger.message404(message)
+        status, error = DB.rollback(message)
+        return messenger.message404(error)
 
 
 @inject
 def modify_hardware_tag(card, DB: MySQL, EEM: EEM):
+    DB.start_transaction()
+
     status, message = modify_card(
         card,
         __table_hardware,
@@ -294,14 +331,28 @@ def modify_hardware_tag(card, DB: MySQL, EEM: EEM):
         DB,
         EEM)
 
+    # First status code checks:
+    # 1: Syntaxis
+    # 2: Completeness
     if status:
-        return messenger.message200(message)
+        status, message = DB.commit_transaction()
+        # Second status checks:
+        # 1: Data integrity
+        if status:
+            return messenger.message200("OK")
+
+        # Implicit rollback
+        else:
+            return messenger.message404(message)
     else:
-        return messenger.message409(message)
+        status, error = DB.rollback(message)
+        return messenger.message404(error)
 
 
 @inject
 def modify_net_tag(card, DB: MySQL, EEM: EEM):
+    DB.start_transaction()
+
     status, message = modify_card(
         card,
         __table_net,
@@ -309,27 +360,51 @@ def modify_net_tag(card, DB: MySQL, EEM: EEM):
         DB,
         EEM)
 
+    # First status code checks:
+    # 1: Syntaxis
+    # 2: Completeness
     if status:
-        return messenger.message200(message)
+        status, message = DB.commit_transaction()
+        # Second status checks:
+        # 1: Data integrity
+        if status:
+            return messenger.message200("OK")
+
+        # Implicit rollback
+        else:
+            return messenger.message404(message)
     else:
-        return messenger.message409(message)
+        status, error = DB.rollback(message)
+        return messenger.message404(error)
 
 
 # TODO: Add does not exists card control
 @inject
 def erase_card(id, DB: MySQL, EEM: EEM):
+    DB.start_transaction()
+
     if get_card(id, DB, EEM)["status"] == "eeio":
-        status, message = DB.delete_query_simple(
+        DB.start_transaction()
+        status1, message = DB.delete_query_simple(
             __table_hardware_capacity,
             "hardware_id",
             id
         )
 
-        status, message = DB.delete_query_simple(
+        status2, message = DB.delete_query_simple(
             __table_hardware,
             "id",
             id
         )
+        if not status1:
+            status = False
+            message = message1
+        elif not status2:
+            status = False
+            message = message2
+        else: 
+            status = True
+
     else:
         status, message = DB.delete_query_simple(
             __table_net,
@@ -337,7 +412,19 @@ def erase_card(id, DB: MySQL, EEM: EEM):
             id
         )
 
+    # First status code checks:
+    # 1: Syntaxis
+    # 2: Completeness
     if status:
-        return messenger.message200(message)
+        status, result = DB.commit_transaction()
+        # Second status checks:
+        # 1: Data integrity
+        if status:
+            return messenger.message200("OK")
+
+        # Implicit rollback
+        else:
+            return messenger.message404(message)
     else:
-        return messenger.message404(message)
+        status, error = DB.rollback(messsage)
+        return messenger.message404(error)
