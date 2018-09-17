@@ -354,6 +354,23 @@ definitions:
                 type: string
             assigned_to:
                 type: string
+            requirements:
+                type: array
+                items:
+                    $ref: '#/definitions/Requirement'
+
+    Requirement:
+        type: object
+        properties:
+            hardware_type:
+                type: string
+            model:
+                type: string
+            hardware_capacity_requirements:
+                type: array
+                items:
+                    $ref: '#/definitions/Capacity'
+
 
     Server:
         type: object

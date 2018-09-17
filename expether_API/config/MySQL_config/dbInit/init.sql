@@ -19,20 +19,23 @@ CREATE TABLE IF NOT EXISTS workloads (
 	);
 
 CREATE TABLE IF NOT EXISTS hardware_requirements (
+	requirement_id int NOT NULL AUTO_INCREMENT,
 	workload_id int NOT NULL,
 	hardware_type varchar(255) NOT NULL,
 	model varchar(255),
-	PRIMARY KEY (workload_id,hardware_type),
+	PRIMARY KEY (requirement_id,workload_id),
 	FOREIGN KEY (workload_id) REFERENCES workloads(id)
 	);
 
 CREATE TABLE IF NOT EXISTS capacity_requirements (
 	workload_id int NOT NULL,
+	requirement_id int NOT NULL,
 	requirement_name varchar(255) NOT NULL,
-	unit varchar(255),
 	value int NOT NULL,
-	PRIMARY KEY(workload_id,requirement_name),
-	FOREIGN KEY (workload_id) REFERENCES workloads(id)
+	unit varchar(255),
+	PRIMARY KEY(workload_id,requirement_id,requirement_name),
+	FOREIGN KEY (workload_id) REFERENCES workloads(id),
+	FOREIGN KEY (requirement_id) REFERENCES hardware_requirements(requirement_id)
 	);
 
 CREATE TABLE IF NOT EXISTS net_card (

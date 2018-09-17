@@ -8,6 +8,7 @@ workload_keys = [
 
 
 hardware_requirements_keys = [
+        "requirement_id",
         "workload_id",
         "hardware_type",
         "model"
@@ -15,9 +16,10 @@ hardware_requirements_keys = [
 
 capacity_requirements_keys = [
         "workload_id",
+        "requirement_id",
         "requirement_name",
-        "unit",
-        "value"
+        "value",
+        "unit"
         ]
 
 hardware_card_keys = [
