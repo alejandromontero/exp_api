@@ -401,7 +401,7 @@ definitions:
     Capacity:
         type: object
         properties:
-            capacity_name:
+            requirement_name:
                 type: string
             unit:
                 type: string

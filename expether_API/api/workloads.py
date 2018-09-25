@@ -26,14 +26,18 @@ def get_workload_requirements(DB, id):
     result = DB.select_query(statement)
     return result
 
-def get_workload_capacities(DB, id):
+
+def get_workload_capacities(DB, id, requirement_id):
     statement = (
         "SELECT * FROM %s "
-        "WHERE workload_id = %s") % (
+        "WHERE workload_id = %s "
+        "AND requirement_id = %s") % (
             __table_capacity_requirements,
-            id)
+            id,
+            requirement_id)
     result = DB.select_query(statement)
     return result
+
 
 def process_workload(DB, workload):
     hardware_requirement_key_simplified = deepcopy(hardware_requirements_keys)
@@ -53,7 +57,7 @@ def process_workload(DB, workload):
         for x in range(0, len(hardware_requirement_key_simplified)):
             processed_req[
                 hardware_requirement_key_simplified[x]] = requirement[x+2]
-        capacities = get_workload_capacities(DB, workload[0])
+        capacities = get_workload_capacities(DB, workload[0], requirement[0])
         processed_req["hardware_capacity_requirements"] = []
         for capacity in capacities:
             processed_cap = {}
@@ -113,20 +117,6 @@ def create_workload(workload, DB: MySQL):
         message = "Inserted workload data is incorrect"
         return messenger.message404(message)
 
-    values = []
-    for x in range(0, len(mapping)):
-        if mapping[x] in workload:
-            values.append(workload[mapping[x]])
-        else:
-            message = "%s not introduced in the request" % (
-                mapping[x])
-            return messenger.message404(message)
-
-    status1, message1 = DB.insert_query(
-        __table_workloads,
-        mapping,
-        values)
-
     # Get the assigned ID of the workload
     statement = ("SELECT MAX(id) FROM workloads")
     workload_id = DB.select_query(statement)
@@ -137,10 +127,35 @@ def create_workload(workload, DB: MySQL):
     else:
         workload_id += 1
 
+    values = [workload_id]
+    for x in range(0, len(mapping)):
+        if mapping[x] in workload:
+            values.append(workload[mapping[x]])
+        else:
+            message = "%s not introduced in the request" % (
+                mapping[x])
+            return messenger.message404(message)
+
+    status1, message1 = DB.insert_query(
+        __table_workloads,
+        workload_keys,
+        values)
+
     # Time to create the requirements of the workload, one entry each
     requirements = workload["requirements"]
+    req_number = 0
     for requirement in requirements:
-        values = [workload_id]
+        req_number += 1
+        statement = ("SELECT MAX(requirement_id) FROM hardware_requirements")
+        req_id = DB.select_query(statement)
+        while (isinstance(req_id, Iterable)):
+            req_id = next(iter(req_id))
+        if not req_id:
+            req_id = req_number
+        else:
+            req_id += req_number
+
+        values = [req_id, workload_id]
         for x in range(0, len(mapping_requirement)):
             if mapping_requirement[x] in requirement:
                 values.append(requirement[mapping_requirement[x]])
@@ -151,17 +166,8 @@ def create_workload(workload, DB: MySQL):
 
         status2, message2 = DB.insert_query(
             __table_hardware_requirements,
-            mapping_requirement_insert,
+            hardware_requirements_keys,
             values)
-
-        statement = ("SELECT MAX(requirement_id) FROM hardware_requirements")
-        req_id = DB.select_query(statement)
-        while (isinstance(req_id, Iterable)):
-            req_id = next(iter(req_id))
-        if not req_id:
-            req_id = 1
-        else:
-            req_id += 1
 
         capacity_req = requirement["hardware_capacity_requirements"]
         for capacity in capacity_req:
@@ -206,7 +212,7 @@ def create_workload(workload, DB: MySQL):
         else:
             return messenger.message404(message)
     else:
-        status, error = DB.rollback(messsage)
+        status, error = DB.rollback(message)
         return messenger.message404(error)
 
 
@@ -215,36 +221,11 @@ def create_workload(workload, DB: MySQL):
 def erase_workload(id, DB: MySQL):
     DB.start_transaction()
 
-    mapping = ["id"]
-    values = [id]
-
-    status1, message1 = DB.delete_query_simple(
-        __table_capacity_requirements,
-        "workload_id",
-        id)
-
-    status2, message2 = DB.delete_query_simple(
-        __table_hardware_requirements,
-        "workload_id",
-        id)
-
-    status3, message3 = DB.delete_query_simple(
+    # A single delete is enough as child tables delete on cascade
+    status, message = DB.delete_query_simple(
         __table_workloads,
         "id",
         id)
-
-    if not status1:
-        status = False
-        message = message1
-    elif not status2:
-        status = False
-        message = message2
-    elif not status3:
-        status = False
-        message = message3
-    else:
-        status = True
-        message = "OK"
 
     # First status code checks:
     # 1: Syntaxis

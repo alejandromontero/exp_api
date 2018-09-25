@@ -41,7 +41,7 @@ net_card_keys = [
         "id",
         "gid",
         "assigned_to"
-        ] 
+        ]
 
 servers_keys = [
         "id",
@@ -55,7 +55,7 @@ assignment_keys = [
         "workload"
         ]
 
-assigned_capacity = [
+assigned_capacity_keys = [
         "hardware_card",
         "server_card",
         "workload",

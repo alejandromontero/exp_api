@@ -385,32 +385,17 @@ def erase_card(id, DB: MySQL, EEM: EEM):
 
     if get_card(id, DB, EEM)["status"] == "eeio":
         DB.start_transaction()
-        status1, message = DB.delete_query_simple(
-            __table_hardware_capacity,
-            "hardware_id",
-            id
-        )
 
-        status2, message = DB.delete_query_simple(
+        status, message = DB.delete_query_simple(
             __table_hardware,
             "id",
-            id
-        )
-        if not status1:
-            status = False
-            message = message1
-        elif not status2:
-            status = False
-            message = message2
-        else: 
-            status = True
+            id)
 
     else:
         status, message = DB.delete_query_simple(
             __table_net,
             "id",
-            id
-        )
+            id)
 
     # First status code checks:
     # 1: Syntaxis
