@@ -1,0 +1,122 @@
+# Create hardware tag for card id: 0x743a65043e28
+# Hardware type: FPGA
+# Model: Bittware A10PL4
+# Capacities:
+	# 1: bandwidth_read: 2000MB/s made up numbers
+	# 2: bandwidth_write: 2000MB/s made up numbers
+# Comment: As the entry for the card may be already in the DB because of the 
+# global-state, it is recomended to request a PUT instead of a POST
+
+curl -X PUT -H 'Content-Type: application/json' -d '{
+	"id": "0x743a65043e28",
+	"hardware": "FPGA",
+	"model": "Bittware A10PL4",
+	"pcie_device_id": "0x10b5",
+	"pcie_vendor_id": "0x8718",
+	"capacity": [{
+		"capacity_name": "bandwidth_read",
+		"unit": "MB/s",
+		"value": 2000
+	}, {
+		"capacity_name": "bandwidth_write",
+		"unit": "MB/s",
+		"value": 2000
+	}]
+}' 'http://localhost:5555/api/card_hardware'
+
+
+# Create hardware tag for card id: 0x743a65043e2a
+# Hardware type: NVME
+# Model: Optane 2701
+# Capacities:
+	# 1: bandwidth_read: 6000MB/s made up numbers
+	# 2: bandwidth_write: 5000MB/s made up numbers
+# Comment: As the entry for the card may be already in the DB because of the 
+# global-state, it is recomended to request a PUT instead of a POST
+
+curl -X PUT -H 'Content-Type: application/json' -d '{
+	"id": "0x743a65043e2a",
+	"hardware": "NVME",
+	"model": "Optane 2701",
+	"pcie_device_id": "0x2701",
+	"pcie_vendor_id": "0x8086",
+	"capacity": [{
+		"capacity_name": "bandwidth_read",
+		"unit": "MB/s",
+		"value": 6000
+	}, {
+		"capacity_name": "bandwidth_write",
+		"unit": "MB/s",
+		"value": 5000
+	}]
+}' 'http://localhost:5555/api/card_hardware'
+
+# Create workload with a single requirement
+# Hardware type: FPGA
+# Model: A10PL4
+# Requirements:
+#	1: bandwidth_read: 1000MB/s made up numbers
+#	2: bandwidth_write: 2000MB/s made up numbers
+
+curl -X POST -H 'Content-Type: application/json' -d '{
+	"assigned_to": "bscdc14",
+	"description": "test1",
+	"name": "test1",
+	"user": "Alex",
+	"requirements": [{
+		"hardware_type": "FPGA",
+		"model": "A10PL4",
+		"hardware_capacity_requirements": [{
+			"requirement_name": "bandwidth_read",
+			"unit": "MB/s",
+			"value": 1000
+		}, {
+			"requirement_name": "bandwidth_write",
+			"unit": "MB/s",
+			"value": 1000
+		}]
+	}]
+}' 'http://localhost:5555/api/workload'
+
+# Create workload with two requirements
+# Hardware types:
+#	1: FPGA
+#	2: NVME
+# Models:
+#	1: A10PL4
+#	2: Does not matter
+# Requirements:
+#	FPGA:
+#		1:	bandwidth_read: 1000MB/s made up numbers
+#	NVME:
+#		1:	bandwidth_read:	6000MB/s made up numbers
+#		2:	bandwith_write:	5000MB/s made up numbers
+
+curl -X POST -H 'Content-Type: application/json' -d '{
+	"assigned_to": "bscdc14",
+	"description": "test1",
+	"name": "test1",
+	"user": "Alex",
+	"requirements": [{
+		"hardware_type": "FPGA",
+		"model": "A10PL4",
+		"hardware_capacity_requirements": [{
+			"requirement_name": "bandwidth_read",
+			"unit": "MB/s",
+			"value": 1000
+		}, {
+			"requirement_name": "bandwidth_write",
+			"unit": "MB/s",
+			"value": 1000
+		}]
+	}, {
+		"hardware_type": "NVME",
+		"model": "",
+		"hardware_capacity_requirements": [{
+			"requirement_name": "bandwidth_read",
+			"unit": "MB/s",
+			"value": 6000
+		}]
+	}]
+}' 'http://localhost:5555/api/workload'
+

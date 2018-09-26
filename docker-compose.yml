@@ -13,7 +13,7 @@ services:
         env_file: 
             - config.env
         volumes:
-            #    - ${MYSQL_LOCAL_VOLUME}:/var/lib/mysql  
+            - ${MYSQL_LOCAL_VOLUME}:/var/lib/mysql  
             - ./expether_API/config/MySQL_config/dbInit:/docker-entrypoint-initdb.d/:ro  
         ports:
             - ${MYSQL_PORT}:3306 # In case there needs to be changed later 
